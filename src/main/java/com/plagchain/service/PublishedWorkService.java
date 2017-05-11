@@ -11,7 +11,7 @@ import java.util.List;
 
 /**
  * Created by Jagrut on 27-04-2017.
- * Service to manage PublishedWork
+ * Service to manage PublishedWork Database tasks
  */
 @Service
 public class PublishedWorkService {

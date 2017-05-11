@@ -21,7 +21,7 @@ public class PublishedWork implements Serializable {
 
     @NotNull
     @Field("doc_hash")
-    private String docHash;
+    private String docHashKey;
 
     @NotNull
     @Field("list_minHash")
@@ -29,9 +29,6 @@ public class PublishedWork implements Serializable {
 
     @Field("publisher_address")
     private String publisherAddress;
-
-    @Field("block_hash")
-    private String blockhash;
 
     @Field("timestamp")
     private String timestamp;
@@ -45,11 +42,11 @@ public class PublishedWork implements Serializable {
     }
 
     public String getDocHash() {
-        return docHash;
+        return docHashKey;
     }
 
     public void setDocHash(String docHash) {
-        this.docHash = docHash;
+        this.docHashKey = docHash;
     }
 
     public List<String> getListMinHash() {
@@ -66,14 +63,6 @@ public class PublishedWork implements Serializable {
 
     public void setPublisherAddress(String publisherAddress) {
         this.publisherAddress = publisherAddress;
-    }
-
-    public String getBlockhash() {
-        return blockhash;
-    }
-
-    public void setBlockhash(String blockhash) {
-        this.blockhash = blockhash;
     }
 
     public String getTimestamp() {
@@ -105,10 +94,9 @@ public class PublishedWork implements Serializable {
     public String toString() {
         return "PublishedWork{" +
                 "id='" + id + '\'' +
-                ", docHash='" + docHash + '\'' +
+                ", docHashKey='" + docHashKey + '\'' +
                 ", listMinHash=" + listMinHash +
                 ", publisherAddress='" + publisherAddress + '\'' +
-                ", blockhash='" + blockhash + '\'' +
                 ", timestamp='" + timestamp + '\'' +
                 '}';
     }
