@@ -41,11 +41,11 @@ public class PublishedWork implements Serializable {
         this.id = id;
     }
 
-    public String getDocHash() {
+    public String getDocHashKey() {
         return docHashKey;
     }
 
-    public void setDocHash(String docHash) {
+    public void setDocHashKey(String docHash) {
         this.docHashKey = docHash;
     }
 

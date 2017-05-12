@@ -32,7 +32,7 @@ public class PlagCheckREST {
         log.info("REST request to test : {}", saveTest);
 
         PublishedWork work = new PublishedWork();
-        work.setDocHash(saveTest);
+        work.setDocHashKey(saveTest);
         List<String> someRandomList = new ArrayList<>();
         someRandomList.add("minhash1");
         someRandomList.add("minhash2");
