@@ -1,6 +1,11 @@
 package com.plagchain.service;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.plagchain.domain.ChainData;
 import com.plagchain.domain.PublishedWork;
+import com.plagchain.domain.UnpublishedWork;
+import com.plagchain.repository.UnpublishedWorkRepository;
 import multichain.command.*;
 import multichain.object.Stream;
 import multichain.object.StreamItem;
@@ -12,6 +17,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
+import javax.xml.bind.DatatypeConverter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -35,8 +41,17 @@ public class HashOrganization {
     @Value("${plagdetection.streamname.unpublishedwork}")
     private String unpublishedWorkStreamName;
 
+    @Value("${plagdetection.streamdata.filetype.image}")
+    private String fileTypeImage;
+
+    @Value("${plagdetection.streamdata.filetype.text}")
+    private String fileTypeText;
+
     @Inject
     private PublishedWorkService publishedWorkService;
+
+    @Inject
+    private UnpublishedWorkService unpublishedWorkService;
 
     /**
      * Run this method after every $time milliseconds mentioned in application.properties file
@@ -45,11 +60,20 @@ public class HashOrganization {
     private void startOrganization() {
         log.info("Organization of hashes started.");
         ChainCommand.initializeChain(chainName);
+
+        log.info("Organization of PublishedWork hashes started.");
         organizePublishedWork();
+        log.info("Organization of PublishedWork hashes finished.");
+
+        log.info("Organization of UnpublishedWork hashes started.");
+        organizeUnpublishedWork();
+        log.info("Organization of UnpublishedWork hashes finished.");
+
+        log.info("Organization of hashes finished.");
     }
 
     /**
-     * Responsible for organizing the hashes for "publishedwork" stream
+     * Responsible for organizing the hashes for "publishedWork" stream
      */
     private void organizePublishedWork() {
         //if not subscribed already, subscribe to the stream
@@ -60,10 +84,8 @@ public class HashOrganization {
         List<StreamKeyPublisherInfo> allKeysFromPublishedworkStream = allKeysInStream(publishedWorkStreamName);
         System.out.println(allKeysFromPublishedworkStream.size());
         if(allKeysFromPublishedworkStream != null && allKeysFromPublishedworkStream.size() > 0) {
-            //filter the keys which are confirmed
-            allKeysFromPublishedworkStream = allKeysFromPublishedworkStream.stream()
-                .filter(chainItem -> chainItem.getConfirmed() > 0)
-                .collect(Collectors.toList());
+            //filter the keys which are confirmed in plagchain
+            allKeysFromPublishedworkStream = filterChainKeys(allKeysFromPublishedworkStream);
             System.out.println(allKeysFromPublishedworkStream.size());
             //choose the keys that are not already in the database
             List<StreamKeyPublisherInfo> newItems = allKeysFromPublishedworkStream.stream()
@@ -75,16 +97,53 @@ public class HashOrganization {
                 //get all items associated with this key from this particular stream
                 List<StreamItem> addToDatabase = allItemsForKey(publishedWorkStreamName, singleItem.getKey());
                 //add relevant info to POJO and save the POJO in DB
-                PublishedWork dbPutItem = new PublishedWork();
-                dbPutItem.setDocHashKey(singleItem.getKey());
-                dbPutItem.setPublisherAddress(addToDatabase.get(0).getPublishers().get(0));
-                dbPutItem.setTimestamp(addToDatabase.get(0).getTime().toString());
-                List<String> minHashList = new ArrayList<>();
-                for(StreamItem minHash : addToDatabase) {
-                    minHashList.add(minHash.getData());
+                if(addToDatabase != null && addToDatabase.size() > 0) {
+                    PublishedWork dbPutItem = new PublishedWork();
+                    dbPutItem.setDocHashKey(singleItem.getKey());
+                    dbPutItem.setPublisherAddress(addToDatabase.get(0).getPublishers().get(0));
+                    dbPutItem.setTimestamp(addToDatabase.get(0).getTime().toString());
+
+                    dbPutItem = (PublishedWork) addMinHashToDbObject(addToDatabase, dbPutItem);
+                    publishedWorkService.save(dbPutItem);
                 }
-                dbPutItem.setListMinHash(minHashList);
-                publishedWorkService.save(dbPutItem);
+            }
+        }
+    }
+
+    /**
+     * Responsible for organizing the hashes for "unpublishedWork" stream
+     */
+    private void organizeUnpublishedWork() {
+        //if not subscribed already, subscribe to the stream
+        subscibeToStream(unpublishedWorkStreamName);
+        //get all items from database
+        List<UnpublishedWork> allItemsInDb = unpublishedWorkService.findAll();
+        //get all keys from block chain
+        List<StreamKeyPublisherInfo> allKeysFromUnpublishedworkStream = allKeysInStream(unpublishedWorkStreamName);
+        System.out.println(allKeysFromUnpublishedworkStream.size());
+        if(allKeysFromUnpublishedworkStream != null && allKeysFromUnpublishedworkStream.size() > 0) {
+            //filter the keys which are confirmed in plagchain
+            allKeysFromUnpublishedworkStream = filterChainKeys(allKeysFromUnpublishedworkStream);
+            System.out.println(allKeysFromUnpublishedworkStream.size());
+            //choose the keys that are not already in the database
+            List<StreamKeyPublisherInfo> newItems = allKeysFromUnpublishedworkStream.stream()
+                    .filter(chainItem -> !allItemsInDb.stream().anyMatch(dbItem -> dbItem.getDocHashKey().equalsIgnoreCase(chainItem.getKey())))
+                    .collect(Collectors.toList());
+            //iterate over all keys not in DB
+            for(StreamKeyPublisherInfo singleItem : newItems) {
+                System.out.println(singleItem.getKey());
+                //get all items associated with this key from this particular stream
+                List<StreamItem> addToDatabase = allItemsForKey(unpublishedWorkStreamName, singleItem.getKey());
+                //add relevant info to POJO and save the POJO in DB
+                if(addToDatabase != null && addToDatabase.size() > 0) {
+                    UnpublishedWork dbPutItem = new UnpublishedWork();
+                    dbPutItem.setDocHashKey(singleItem.getKey());
+                    dbPutItem.setPublisherAddress(addToDatabase.get(0).getPublishers().get(0));
+                    dbPutItem.setTimestamp(addToDatabase.get(0).getTime().toString());
+
+                    dbPutItem = (UnpublishedWork) addMinHashToDbObject(addToDatabase, dbPutItem);
+                    unpublishedWorkService.save(dbPutItem);
+                }
             }
         }
     }
@@ -134,5 +193,59 @@ public class HashOrganization {
         }
     }
 
+    /**
+     * Filter out the keys which are not confirmed and return only the confirmed keys
+     * @param allKeysFromStream all keys from the stream
+     * @return {List<StreamKeyPublisherInfo>} Filtered list of stream keys
+     */
+    private List<StreamKeyPublisherInfo> filterChainKeys(List<StreamKeyPublisherInfo> allKeysFromStream) {
+        return allKeysFromStream.stream()
+                .filter(chainItem -> chainItem.getConfirmed() > 0)
+                .collect(Collectors.toList());
+    }
 
+    /**
+     * Extracts data from list of stream items that are to be added in database and updates the DB object with
+     * min hash of text items or image items.
+     * @param addToDatabase list of stream item to be added to database
+     * @param dbObject the DB object to be updated with min hashes
+     * @return {Object} w.r.t dbObject after updating with min hashes
+     */
+    private Object addMinHashToDbObject(List<StreamItem> addToDatabase, Object dbObject) {
+        List<String> minHashList = new ArrayList<>();
+        List<String> imageMinHashList = new ArrayList<>();
+        String contactInfo = "";
+        for (StreamItem minHash : addToDatabase) {
+            ChainData chainData = transformDataFromHexToObject(minHash.getData());
+            if(chainData.getFileType().equalsIgnoreCase(fileTypeImage))
+                imageMinHashList.add(chainData.getHashData());
+            else
+                minHashList.add(chainData.getHashData());
+            contactInfo = chainData.getContactInfo();
+        }
+        if(dbObject instanceof PublishedWork) {
+            PublishedWork publishedWorkObject = (PublishedWork) dbObject;
+            publishedWorkObject.setListMinHash(minHashList);
+            publishedWorkObject.setImageListMinHash(imageMinHashList);
+            publishedWorkObject.setContactInfo(contactInfo);
+            return  publishedWorkObject;
+        } else {
+            UnpublishedWork unpublishedWorkObject = (UnpublishedWork) dbObject;
+            unpublishedWorkObject.setListMinHash(minHashList);
+            unpublishedWorkObject.setImageListMinHash(imageMinHashList);
+            unpublishedWorkObject.setContactInfo(contactInfo);
+            return unpublishedWorkObject;
+        }
+    }
+
+    /**
+     * Transforms the data from Hex-String to ChainData object
+     * @param dataInHex the data in the form of hexadecimal string
+     * @return {ChainData} object containing relevant information
+     */
+    private ChainData transformDataFromHexToObject(String dataInHex) {
+        String dataInString = new String(DatatypeConverter.parseHexBinary(dataInHex));
+        Gson gson = new Gson();
+        return gson.fromJson(dataInString,ChainData.class);
+    }
 }

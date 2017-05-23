@@ -11,12 +11,12 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Created by Jagrut on 27-04-2017.
- * Database object for Published Work content
+ * Created by Jagrut on 18-05-2017.
+ * Database object fo unpublished work content.
  */
-@Document(collection = "published_work")
-public class PublishedWork implements Serializable {
 
+@Document(collection = "unpublished_work")
+public class UnpublishedWork implements Serializable {
     @NotNull
     @Field("doc_hash")
     private String docHashKey;
@@ -44,8 +44,8 @@ public class PublishedWork implements Serializable {
         return docHashKey;
     }
 
-    public void setDocHashKey(String docHash) {
-        this.docHashKey = docHash;
+    public void setDocHashKey(String docHashKey) {
+        this.docHashKey = docHashKey;
     }
 
     public List<String> getListMinHash() {
@@ -104,8 +104,8 @@ public class PublishedWork implements Serializable {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        final PublishedWork publishedWork = (PublishedWork) o;
-        return Objects.equals(this.docHashKey, publishedWork.docHashKey);
+        final UnpublishedWork unpublishedWork = (UnpublishedWork) o;
+        return Objects.equals(this.docHashKey, unpublishedWork.docHashKey);
     }
 
     @Override
