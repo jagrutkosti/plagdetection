@@ -1,4 +1,4 @@
-package com.plagchain.domain;
+package com.plagchain.database.dbobjects;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

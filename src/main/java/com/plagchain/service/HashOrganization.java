@@ -1,11 +1,11 @@
 package com.plagchain.service;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.plagchain.database.service.PublishedWorkService;
+import com.plagchain.database.service.UnpublishedWorkService;
 import com.plagchain.domain.ChainData;
-import com.plagchain.domain.PublishedWork;
-import com.plagchain.domain.UnpublishedWork;
-import com.plagchain.repository.UnpublishedWorkRepository;
+import com.plagchain.database.dbobjects.PublishedWork;
+import com.plagchain.database.dbobjects.UnpublishedWork;
 import multichain.command.*;
 import multichain.object.Stream;
 import multichain.object.StreamItem;
@@ -101,7 +101,7 @@ public class HashOrganization {
                     PublishedWork dbPutItem = new PublishedWork();
                     dbPutItem.setDocHashKey(singleItem.getKey());
                     dbPutItem.setPublisherAddress(addToDatabase.get(0).getPublishers().get(0));
-                    dbPutItem.setTimestamp(addToDatabase.get(0).getTime().toString());
+                    dbPutItem.setTimestamp(((Long)addToDatabase.get(0).getBlocktime()).toString());
 
                     dbPutItem = (PublishedWork) addMinHashToDbObject(addToDatabase, dbPutItem);
                     publishedWorkService.save(dbPutItem);
@@ -139,7 +139,7 @@ public class HashOrganization {
                     UnpublishedWork dbPutItem = new UnpublishedWork();
                     dbPutItem.setDocHashKey(singleItem.getKey());
                     dbPutItem.setPublisherAddress(addToDatabase.get(0).getPublishers().get(0));
-                    dbPutItem.setTimestamp(addToDatabase.get(0).getTime().toString());
+                    dbPutItem.setTimestamp(((Long)addToDatabase.get(0).getBlocktime()).toString());
 
                     dbPutItem = (UnpublishedWork) addMinHashToDbObject(addToDatabase, dbPutItem);
                     unpublishedWorkService.save(dbPutItem);

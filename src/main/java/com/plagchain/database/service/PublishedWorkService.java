@@ -1,9 +1,15 @@
-package com.plagchain.service;
+package com.plagchain.database.service;
 
-import com.plagchain.domain.PublishedWork;
-import com.plagchain.repository.PublishedWorkRepository;
+import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
+import com.mongodb.MongoClient;
+import com.plagchain.database.dbobjects.PublishedWork;
+import com.plagchain.database.repository.PublishedWorkRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
@@ -17,6 +23,9 @@ import java.util.List;
 public class PublishedWorkService {
 
     private final Logger log = LoggerFactory.getLogger(PublishedWorkService.class);
+
+    @Value("${spring.data.mongodb.database}")
+    private String databaseName;
 
     @Inject
     private PublishedWorkRepository publishedWorkRepository;
@@ -39,6 +48,19 @@ public class PublishedWorkService {
         log.info("Request to get all PublishedWorks");
         List<PublishedWork> result = publishedWorkRepository.findAll();
         return result;
+    }
+
+    /**
+     * Use only for fetching very large number of documents.
+     * Get all documents from PublishedWork collection.
+     * Using MongoTemplate and DBCursor to iterate over millions of records.
+     * @return {DBCursor} to iterate over all documents in the collection
+     */
+    public DBCursor find() {
+        log.info("Request to get all PublishedWorks with DBCursor");
+        MongoTemplate mongoTemplate = new MongoTemplate(new SimpleMongoDbFactory(new MongoClient(), databaseName));
+        DBCollection dbCollection = mongoTemplate.getCollection("published_work");
+        return dbCollection.find();
     }
 
     /**
@@ -68,5 +90,4 @@ public class PublishedWorkService {
         log.info("Request to delete all PublishedWorks");
         publishedWorkRepository.deleteAll();
     }
-
 }

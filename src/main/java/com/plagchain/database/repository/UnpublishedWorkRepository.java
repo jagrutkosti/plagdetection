@@ -1,6 +1,6 @@
-package com.plagchain.repository;
+package com.plagchain.database.repository;
 
-import com.plagchain.domain.UnpublishedWork;
+import com.plagchain.database.dbobjects.UnpublishedWork;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
 /**

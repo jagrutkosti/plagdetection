@@ -8,6 +8,7 @@ public class ChainData {
     private String fileType;
     private String hashData;
     private String contactInfo;
+    private int orderIndex;
 
     public String getFileType() {
         return fileType;
@@ -31,5 +32,13 @@ public class ChainData {
 
     public void setContactInfo(String contactInfo) {
         this.contactInfo = contactInfo;
+    }
+
+    public int getOrder() {
+        return orderIndex;
+    }
+
+    public void setOrder(int orderIndex) {
+        this.orderIndex = orderIndex;
     }
 }
