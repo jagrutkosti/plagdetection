@@ -2,6 +2,7 @@ package com.plagchain.domain;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
@@ -14,6 +15,9 @@ import java.util.Objects;
  */
 @Document(collection = "seed_submission")
 public class SeedSubmission implements Serializable{
+
+    @Id
+    private String id;
 
     @Field("plagchain_seed_hash")
     private String plagchainSeedHash;
@@ -29,6 +33,14 @@ public class SeedSubmission implements Serializable{
 
     @Field("originstamp_bitcoin_submit_time")
     private String originstampBitcoinSubmitTime;
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
 
     public String getPlagchainSeed() {
         return plagchainSeed;
@@ -79,12 +91,12 @@ public class SeedSubmission implements Serializable{
             return false;
         }
         final SeedSubmission seedSubmission = (SeedSubmission) o;
-        return Objects.equals(this.plagchainSeedHash, seedSubmission.getPlagchainSeedHash());
+        return Objects.equals(this.id, seedSubmission.getId());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(this.plagchainSeedHash);
+        return Objects.hashCode(this.id);
     }
 
     @Override

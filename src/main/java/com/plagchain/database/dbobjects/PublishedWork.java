@@ -2,6 +2,7 @@ package com.plagchain.database.dbobjects;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
@@ -16,6 +17,9 @@ import java.util.Objects;
  */
 @Document(collection = "published_work")
 public class PublishedWork implements Serializable {
+
+    @Id
+    private String id;
 
     @NotNull
     @Field("doc_hash")
@@ -39,6 +43,14 @@ public class PublishedWork implements Serializable {
 
     @Field("submitted_originstamp")
     private boolean submittedToOriginstamp;
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
 
     public String getDocHashKey() {
         return docHashKey;
@@ -105,12 +117,12 @@ public class PublishedWork implements Serializable {
             return false;
         }
         final PublishedWork publishedWork = (PublishedWork) o;
-        return Objects.equals(this.docHashKey, publishedWork.docHashKey);
+        return Objects.equals(this.id, publishedWork.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(this.docHashKey);
+        return Objects.hashCode(this.id);
     }
 
     @Override

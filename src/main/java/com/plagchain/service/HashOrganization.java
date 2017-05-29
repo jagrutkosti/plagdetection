@@ -219,9 +219,9 @@ public class HashOrganization {
             try {
                 ChainData chainData = transformDataFromHexToObject(minHash.getData());
                 if (chainData.getFileType().equalsIgnoreCase(fileTypeImage))
-                    imageMinHashList.add(chainData.getHashData());
+                    imageMinHashList.addAll(chainData.getHashData());
                 else
-                    minHashList.add(chainData.getHashData());
+                    minHashList.addAll(chainData.getHashData());
                 contactInfo = chainData.getContactInfo();
             } catch (Exception e) {
                 e.printStackTrace();

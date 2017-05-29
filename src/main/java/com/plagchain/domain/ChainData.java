@@ -1,12 +1,14 @@
 package com.plagchain.domain;
 
+import java.util.List;
+
 /**
  * Created by Jagrut on 22-05-2017.
  * For parsing the data field from a stream
  */
 public class ChainData {
     private String fileType;
-    private String hashData;
+    private List<String> hashData;
     private String contactInfo;
     private int orderIndex;
 
@@ -18,11 +20,11 @@ public class ChainData {
         this.fileType = fileType;
     }
 
-    public String getHashData() {
+    public List<String> getHashData() {
         return hashData;
     }
 
-    public void setHashData(String hashData) {
+    public void setHashData(List<String> hashData) {
         this.hashData = hashData;
     }
 
