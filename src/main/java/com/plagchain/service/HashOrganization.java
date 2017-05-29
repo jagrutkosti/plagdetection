@@ -216,12 +216,16 @@ public class HashOrganization {
         List<String> imageMinHashList = new ArrayList<>();
         String contactInfo = "";
         for (StreamItem minHash : addToDatabase) {
-            ChainData chainData = transformDataFromHexToObject(minHash.getData());
-            if(chainData.getFileType().equalsIgnoreCase(fileTypeImage))
-                imageMinHashList.add(chainData.getHashData());
-            else
-                minHashList.add(chainData.getHashData());
-            contactInfo = chainData.getContactInfo();
+            try {
+                ChainData chainData = transformDataFromHexToObject(minHash.getData());
+                if (chainData.getFileType().equalsIgnoreCase(fileTypeImage))
+                    imageMinHashList.add(chainData.getHashData());
+                else
+                    minHashList.add(chainData.getHashData());
+                contactInfo = chainData.getContactInfo();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
         if(dbObject instanceof PublishedWork) {
             PublishedWork publishedWorkObject = (PublishedWork) dbObject;
