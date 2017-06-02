@@ -42,7 +42,7 @@ public class PublishedWork implements Serializable {
     private String contactInfo;
 
     @Field("submitted_originstamp")
-    private boolean submittedToOriginstamp;
+    private boolean submittedToOriginstamp = false;
 
     public String getId() {
         return id;

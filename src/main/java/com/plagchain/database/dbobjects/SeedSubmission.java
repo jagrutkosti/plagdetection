@@ -1,4 +1,4 @@
-package com.plagchain.domain;
+package com.plagchain.database.dbobjects;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -25,14 +25,20 @@ public class SeedSubmission implements Serializable{
     @Field("plagchain_seed")
     private String plagchainSeed;
 
+    @Field("publishedwork")
+    private boolean publishedWork;
+
+    @Field("originstamp_seed_address")
+    private String originstampBtcAddress;
+
     @Field("originstamp_seed")
     private String originstampSeed;
 
     @Field("originstamp_confirmed")
-    private boolean originstampConfirmed;
+    private int originstampConfirmed = 0;
 
-    @Field("originstamp_bitcoin_submit_time")
-    private String originstampBitcoinSubmitTime;
+    @Field("originstamp_bitcoin_confirm_time")
+    private String originstampBitcoinConfirmTime;
 
     public String getId() {
         return id;
@@ -58,6 +64,22 @@ public class SeedSubmission implements Serializable{
         this.plagchainSeedHash = plagchainSeedHash;
     }
 
+    public boolean isPublishedWork() {
+        return publishedWork;
+    }
+
+    public void setPublishedWork(boolean publishedWork) {
+        this.publishedWork = publishedWork;
+    }
+
+    public String getOriginstampBtcAddress() {
+        return originstampBtcAddress;
+    }
+
+    public void setOriginstampBtcAddress(String originstampBtcAddress) {
+        this.originstampBtcAddress = originstampBtcAddress;
+    }
+
     public String getOriginstampSeed() {
         return originstampSeed;
     }
@@ -66,20 +88,20 @@ public class SeedSubmission implements Serializable{
         this.originstampSeed = originstampSeed;
     }
 
-    public boolean isOriginstampConfirmed() {
+    public int getOriginstampConfirmed() {
         return originstampConfirmed;
     }
 
-    public void setOriginstampConfirmed(boolean originstampConfirmed) {
+    public void setOriginstampConfirmed(int originstampConfirmed) {
         this.originstampConfirmed = originstampConfirmed;
     }
 
-    public String getOriginstampBitcoinSubmitTime() {
-        return originstampBitcoinSubmitTime;
+    public String getOriginstampBitcoinConfirmTime() {
+        return originstampBitcoinConfirmTime;
     }
 
-    public void setOriginstampBitcoinSubmitTime(String originstampBitcoinSubmitTime) {
-        this.originstampBitcoinSubmitTime = originstampBitcoinSubmitTime;
+    public void setOriginstampBitcoinConfirmTime(String originstampBitcoinConfirmTime) {
+        this.originstampBitcoinConfirmTime = originstampBitcoinConfirmTime;
     }
 
     @Override

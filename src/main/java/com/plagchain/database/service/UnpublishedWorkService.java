@@ -1,5 +1,6 @@
 package com.plagchain.database.service;
 
+import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.MongoClient;
@@ -51,27 +52,12 @@ public class UnpublishedWorkService {
     }
 
     /**
-     * Use only for fetching very large number of documents.
-     * Get all documents from UnpublishedWork collection.
-     * Using MongoTemplate and DBCursor to iterate over millions of records.
-     * @return {DBCursor} to iterate over all documents in the collection
-     */
-    public DBCursor find() {
-        log.info("Request to get all UnpublishedWorks with DBCursor");
-        MongoTemplate mongoTemplate = new MongoTemplate(new SimpleMongoDbFactory(new MongoClient(), databaseName));
-        DBCollection dbCollection = mongoTemplate.getCollection("unpublished_work");
-        return dbCollection.find();
-    }
-
-    /**
      *  get one publishedWork by id.
      *  @return the entity
      */
     public UnpublishedWork findOne(String id) {
         log.info("Request to get UnpublishedWork : {}", id);
         UnpublishedWork publishedWork = unpublishedWorkRepository.findOne(id);
-        System.out.println("UnpublishedWorkService#findOne()");
-        //System.out.println(publishedWork.toString());
         return publishedWork;
     }
 
@@ -89,5 +75,31 @@ public class UnpublishedWorkService {
     public void deleteAll(){
         log.info("Request to delete all UnpublishedWorks");
         unpublishedWorkRepository.deleteAll();
+    }
+
+    /**
+     * Use only for fetching very large number of documents.
+     * Get all documents from UnpublishedWork collection.
+     * Using MongoTemplate and DBCursor to iterate over millions of records.
+     * @return {DBCursor} to iterate over all documents in the collection
+     */
+    public DBCursor find() {
+        log.info("Request to get all UnpublishedWorks with DBCursor");
+        MongoTemplate mongoTemplate = new MongoTemplate(new SimpleMongoDbFactory(new MongoClient(), databaseName));
+        DBCollection dbCollection = mongoTemplate.getCollection("unpublished_work");
+        return dbCollection.find();
+    }
+
+    /**
+     * Use only for fetching very large number of documents.
+     * Get all documents from UnpublishedWork collection which satisfy the criteria.
+     * Using MongoTemplate and DBCursor to iterate over millions of records.
+     * @return {DBCursor} to iterate over all documents in the collection
+     */
+    public DBCursor find(BasicDBObject query) {
+        log.info("Request to get DBCUrsor for all UnpublishedWorks for given query");
+        MongoTemplate mongoTemplate = new MongoTemplate(new SimpleMongoDbFactory(new MongoClient(), databaseName));
+        DBCollection dbCollection = mongoTemplate.getCollection("unpublished_work");
+        return dbCollection.find(query);
     }
 }
