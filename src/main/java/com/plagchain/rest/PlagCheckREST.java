@@ -2,11 +2,10 @@ package com.plagchain.rest;
 
 import com.plagchain.database.dbobjects.PublishedWork;
 import com.plagchain.database.service.PublishedWorkService;
+import com.plagchain.domain.ResponseItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.inject.Inject;
 import java.util.ArrayList;
@@ -39,5 +38,11 @@ public class PlagCheckREST {
         work.setListMinHash(someRandomList);
         publishedWorkService.save(work);
         return "Hello! The Object was saved";
+    }
+
+    @RequestMapping(path = "/getHashSeed", method = RequestMethod.POST)
+    public ResponseItem getHashSeedDetails(@RequestParam("hashString") String hashString) {
+        log.info("REST request to get seed details for hash: {}", hashString);
+        return null;
     }
 }

@@ -29,8 +29,8 @@ import java.util.stream.Collectors;
  */
 
 @Component
-public class HashOrganization {
-    private final Logger log = LoggerFactory.getLogger(HashOrganization.class);
+public class HashOrganizationService {
+    private final Logger log = LoggerFactory.getLogger(HashOrganizationService.class);
 
     @Value("${plagdetection.chainname}")
     private String chainName;
@@ -40,12 +40,6 @@ public class HashOrganization {
 
     @Value("${plagdetection.streamname.unpublishedwork}")
     private String unpublishedWorkStreamName;
-
-    @Value("${plagdetection.streamdata.filetype.image}")
-    private String fileTypeImage;
-
-    @Value("${plagdetection.streamdata.filetype.text}")
-    private String fileTypeText;
 
     @Inject
     private PublishedWorkService publishedWorkService;
@@ -82,18 +76,17 @@ public class HashOrganization {
         List<PublishedWork> allItemsInDb = publishedWorkService.findAll();
         //get all keys from block chain
         List<StreamKeyPublisherInfo> allKeysFromPublishedworkStream = allKeysInStream(publishedWorkStreamName);
-        System.out.println(allKeysFromPublishedworkStream.size());
+
         if(allKeysFromPublishedworkStream != null && allKeysFromPublishedworkStream.size() > 0) {
             //filter the keys which are confirmed in plagchain
             allKeysFromPublishedworkStream = filterChainKeys(allKeysFromPublishedworkStream);
-            System.out.println(allKeysFromPublishedworkStream.size());
+
             //choose the keys that are not already in the database
             List<StreamKeyPublisherInfo> newItems = allKeysFromPublishedworkStream.stream()
                     .filter(chainItem -> !allItemsInDb.stream().anyMatch(dbItem -> dbItem.getDocHashKey().equalsIgnoreCase(chainItem.getKey())))
                     .collect(Collectors.toList());
             //iterate over all keys not in DB
             for(StreamKeyPublisherInfo singleItem : newItems) {
-                System.out.println(singleItem.getKey());
                 //get all items associated with this key from this particular stream
                 List<StreamItem> addToDatabase = allItemsForKey(publishedWorkStreamName, singleItem.getKey());
                 //add relevant info to POJO and save the POJO in DB
@@ -120,18 +113,17 @@ public class HashOrganization {
         List<UnpublishedWork> allItemsInDb = unpublishedWorkService.findAll();
         //get all keys from block chain
         List<StreamKeyPublisherInfo> allKeysFromUnpublishedworkStream = allKeysInStream(unpublishedWorkStreamName);
-        System.out.println(allKeysFromUnpublishedworkStream.size());
+
         if(allKeysFromUnpublishedworkStream != null && allKeysFromUnpublishedworkStream.size() > 0) {
             //filter the keys which are confirmed in plagchain
             allKeysFromUnpublishedworkStream = filterChainKeys(allKeysFromUnpublishedworkStream);
-            System.out.println(allKeysFromUnpublishedworkStream.size());
+
             //choose the keys that are not already in the database
             List<StreamKeyPublisherInfo> newItems = allKeysFromUnpublishedworkStream.stream()
                     .filter(chainItem -> !allItemsInDb.stream().anyMatch(dbItem -> dbItem.getDocHashKey().equalsIgnoreCase(chainItem.getKey())))
                     .collect(Collectors.toList());
             //iterate over all keys not in DB
             for(StreamKeyPublisherInfo singleItem : newItems) {
-                System.out.println(singleItem.getKey());
                 //get all items associated with this key from this particular stream
                 List<StreamItem> addToDatabase = allItemsForKey(unpublishedWorkStreamName, singleItem.getKey());
                 //add relevant info to POJO and save the POJO in DB
@@ -218,10 +210,8 @@ public class HashOrganization {
         for (StreamItem minHash : addToDatabase) {
             try {
                 ChainData chainData = transformDataFromHexToObject(minHash.getData());
-                if (chainData.getFileType().equalsIgnoreCase(fileTypeImage))
-                    imageMinHashList.addAll(chainData.getHashData());
-                else
-                    minHashList.addAll(chainData.getHashData());
+                imageMinHashList.addAll(chainData.getImageHash());
+                minHashList.addAll(chainData.getTextMinHash());
                 contactInfo = chainData.getContactInfo();
             } catch (Exception e) {
                 e.printStackTrace();

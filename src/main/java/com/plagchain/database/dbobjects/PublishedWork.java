@@ -2,6 +2,8 @@ package com.plagchain.database.dbobjects;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -17,6 +19,8 @@ import java.util.Objects;
  */
 @Document(collection = "published_work")
 public class PublishedWork implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     @Id
     private String id;

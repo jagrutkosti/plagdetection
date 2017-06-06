@@ -7,25 +7,24 @@ import java.util.List;
  * For parsing the data field from a stream
  */
 public class ChainData {
-    private String fileType;
-    private List<String> hashData;
+    private List<String> textMinHash;
+    private List<String> imageHash;
     private String contactInfo;
-    private int orderIndex;
 
-    public String getFileType() {
-        return fileType;
+    public List<String> getTextMinHash() {
+        return textMinHash;
     }
 
-    public void setFileType(String fileType) {
-        this.fileType = fileType;
+    public void setTextMinHash(List<String> textMinHash) {
+        this.textMinHash = textMinHash;
     }
 
-    public List<String> getHashData() {
-        return hashData;
+    public List<String> getImageHash() {
+        return imageHash;
     }
 
-    public void setHashData(List<String> hashData) {
-        this.hashData = hashData;
+    public void setImageHash(List<String> imageHash) {
+        this.imageHash = imageHash;
     }
 
     public String getContactInfo() {
@@ -34,13 +33,5 @@ public class ChainData {
 
     public void setContactInfo(String contactInfo) {
         this.contactInfo = contactInfo;
-    }
-
-    public int getOrder() {
-        return orderIndex;
-    }
-
-    public void setOrder(int orderIndex) {
-        this.orderIndex = orderIndex;
     }
 }

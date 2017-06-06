@@ -1,8 +1,10 @@
 package com.plagchain.service;
 
-import com.google.gson.GsonBuilder;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCursor;
+import com.mongodb.MongoClient;
 import com.originstamp.client.dto.OriginStampHash;
 import com.originstamp.client.dto.OriginStampTableEntity;
 import com.plagchain.database.dbobjects.PublishedWork;
@@ -14,6 +16,8 @@ import com.plagchain.database.service.UnpublishedWorkService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -38,8 +42,8 @@ import java.util.StringJoiner;
  */
 
 @Component
-public class BitcoinAnchor {
-    private final Logger log = LoggerFactory.getLogger(BitcoinAnchor.class);
+public class BitcoinAnchorService {
+    private final Logger log = LoggerFactory.getLogger(BitcoinAnchorService.class);
 
     @Inject
     private PublishedWorkService publishedWorkService;
@@ -56,8 +60,19 @@ public class BitcoinAnchor {
     @Value("${originstamp.api.key}")
     private String apiKey;
 
-    @Scheduled(fixedRateString = "${plagdetection.hash.anchor.timeinterval}")
-    public void startAnchoring() {
+    @Value("${spring.data.mongodb.database}")
+    private String databaseName;
+
+    private MongoTemplate mongoTemplate;
+    private ObjectMapper objectMapper;
+
+    @Scheduled(initialDelay = 10000, fixedRateString = "${plagdetection.hash.anchor.timeinterval}")
+    public void startAnchoring() throws IOException {
+        mongoTemplate = new MongoTemplate(new SimpleMongoDbFactory(new MongoClient(), databaseName));
+        JaxbAnnotationModule jaxbAnnotationModule = new JaxbAnnotationModule();
+        objectMapper = new ObjectMapper();
+        objectMapper.registerModule(jaxbAnnotationModule);
+
         log.info("Start Anchoring");
 
         log.info("Checking confirmation of existing transactions");
@@ -79,7 +94,7 @@ public class BitcoinAnchor {
      * Checks for all non-confirmed hashes in the database if they are already confirmed by querying the
      * originstamp server.
      */
-    public void checkBitcoinConfirmationAndUpdate() {
+    public void checkBitcoinConfirmationAndUpdate() throws IOException {
         //Get all hashes that were submitted by the api key used by plagdetection module(this module)
         HashSet<OriginStampTableEntity.Hashes> allHashesForComparison = new HashSet<>();
         int sizeOfReceivedHashes;
@@ -88,10 +103,11 @@ public class BitcoinAnchor {
         do {
             //Request-Body requires offset and records. Get 250 results in one request (does not work with more than around 300 records).
             String requestBody = "{\"offset\":" + offset + ",\"records\":" + records + ",\"api_key\":\"" + apiKey + "\"}";
-            String responseMultiHash = dataTransferOriginstamp(RequestMethod.POST, "table/", false, null, requestBody);
-
+            String responseMultiHash = dataTransferOriginstamp(RequestMethod.POST, "table", false, null, requestBody);
             //Parse the response into object and extract only the hashes array and add them to our list of hashes.
-            OriginStampTableEntity responseObject = new GsonBuilder().create().fromJson(responseMultiHash, OriginStampTableEntity.class);
+            OriginStampTableEntity responseObject = objectMapper.readValue(responseMultiHash, OriginStampTableEntity.class);
+            System.out.println(responseMultiHash);
+
             sizeOfReceivedHashes = responseObject.getHashes().size();
             allHashesForComparison.addAll(responseObject.getHashes());
             offset += records;
@@ -106,24 +122,24 @@ public class BitcoinAnchor {
         BasicDBObject query = new BasicDBObject("originstamp_confirmed", new BasicDBObject("$in", unconfirmList));
         DBCursor cursor = seedSubmissionService.find(query);
         while(cursor.hasNext()){
-            SeedSubmission singleDocument = (SeedSubmission) cursor.next();
+            SeedSubmission singleDocument = mongoTemplate.getConverter().read(SeedSubmission.class, cursor.next());
             //Find the document in the received list of hashes by comparing the hashes
             for(OriginStampTableEntity.Hashes singleResponseItem : allHashesForComparison) {
                 if(singleResponseItem.getHashString().equals(singleDocument.getPlagchainSeedHash())) {
-                    /*
-                     * Check if the hash exist.
+
+                     /* Check if the hash exist.
                      * 0- not submitted
                      * 1- submitted to bitcoin
                      * 2- included in block
-                     * 3- stamp verified and has one block above it.
-                     */
-                    if(singleResponseItem.getSubmitStatus().getMultiSeed() > 1) {
+                     * 3- stamp verified and has one block above it. */
+
+                    if(singleResponseItem.getSubmitStatus().getMultiSeed() != null && singleResponseItem.getSubmitStatus().getMultiSeed() > 1) {
                         singleDocument.setOriginstampConfirmed(singleResponseItem.getSubmitStatus().getMultiSeed());
                         singleDocument.setOriginstampBitcoinConfirmTime(singleResponseItem.getDateCreated());
 
                         //Get bitcoin address to which the transaction was made. This address can be used to search the bitcoin blockchain
                         String responseSingleHash = dataTransferOriginstamp(RequestMethod.GET, "", true, singleResponseItem.getHashString(), null);
-                        OriginStampHash responseSingleHashObject = new GsonBuilder().create().fromJson(responseSingleHash, OriginStampHash.class);
+                        OriginStampHash responseSingleHashObject = objectMapper.readValue(responseSingleHash, OriginStampHash.class);
                         singleDocument.setOriginstampBtcAddress(responseSingleHashObject.getMultiSeed().getBitcoinAddress());
 
                         //Get seed for this hash
@@ -132,7 +148,7 @@ public class BitcoinAnchor {
                             singleDocument.setOriginstampSeed(originstampSeed);
                         }
                         seedSubmissionService.save(singleDocument);
-                    } else if (singleResponseItem.getSubmitStatus().getMultiSeed() == 1) {
+                    } else if (singleResponseItem.getSubmitStatus().getMultiSeed() != null && singleResponseItem.getSubmitStatus().getMultiSeed() == 1) {
                         singleDocument.setOriginstampConfirmed(1);
                         //Get seed, when it was already submitted to bitcoin
                         String originstampSeed = dataTransferOriginstamp(RequestMethod.GET, "download/seed/", true, singleResponseItem.getHashString(), null);
@@ -153,13 +169,15 @@ public class BitcoinAnchor {
         StringJoiner seed = new StringJoiner(" ");
         BasicDBObject query = new BasicDBObject("submitted_originstamp", false);
         DBCursor cursor;
+        int counter = 0;
         //Get transactions from respective DB items which are not submitted yet.
         if(isPublishedWorkStream) {
             cursor = publishedWorkService.find(query);
-            while(cursor.hasNext()) {
-                PublishedWork singleDocument = (PublishedWork) cursor.next();
+            while(cursor.hasNext()){
+                PublishedWork singleDocument = mongoTemplate.getConverter().read(PublishedWork.class, cursor.next());
                 //Append the document hash
                 seed.add(singleDocument.getDocHashKey());
+                counter++;
                 //Set submittedToOriginstamp to true and save in DB
                 singleDocument.setSubmittedToOriginstamp(true);
                 publishedWorkService.save(singleDocument);
@@ -167,29 +185,33 @@ public class BitcoinAnchor {
         } else {
             cursor = unpublishedWorkService.find(query);
             while(cursor.hasNext()) {
-                UnpublishedWork singleDocument = (UnpublishedWork) cursor.next();
+                UnpublishedWork singleDocument = mongoTemplate.getConverter().read(UnpublishedWork.class, cursor.next());
                 //Append the document hash
                 seed.add(singleDocument.getDocHashKey());
+                counter++;
                 //Set submittedToOriginstamp to true and save in DB
                 singleDocument.setSubmittedToOriginstamp(true);
                 unpublishedWorkService.save(singleDocument);
             }
         }
-        //Get hash of the seed file
-        String seedHash = generateSHA256HashFromString(seed.toString());
-        //Submit to Originstamp for stamping the hash
-        String responseFromOriginstamp = dataTransferOriginstamp(RequestMethod.POST, "", true, seedHash, null);
+        if(counter > 0) {
+            //Get hash of the seed file
+            String seedHash = generateSHA256HashFromString(seed.toString());
+            //Submit to Originstamp for stamping the hash
+            String responseFromOriginstamp = dataTransferOriginstamp(RequestMethod.POST, "", true, seedHash, "{}");
 
-        //Save the seed information to DB
-        SeedSubmission saveSeedToDB = new SeedSubmission();
-        saveSeedToDB.setPlagchainSeed(seed.toString());
-        saveSeedToDB.setPlagchainSeedHash(seedHash);
-        if(isPublishedWorkStream)
-            saveSeedToDB.setPublishedWork(true);
-        seedSubmissionService.save(saveSeedToDB);
+            //Save the seed information to DB
+            SeedSubmission saveSeedToDB = new SeedSubmission();
+            saveSeedToDB.setPlagchainSeed(seed.toString());
+            saveSeedToDB.setPlagchainSeedHash(seedHash);
+            if(isPublishedWorkStream)
+                saveSeedToDB.setPublishedWork(true);
+            seedSubmissionService.save(saveSeedToDB);
 
-        log.info("Saved and Submitted Hash: {}", seedHash);
-        log.info("Message From Server: {}", responseFromOriginstamp);
+            log.info("Saved and Submitted Hash: {}", seedHash);
+            log.info("Message From Server: {}", responseFromOriginstamp);
+        } else
+            log.info("No new hashes found");
     }
 
     /**
@@ -238,15 +260,17 @@ public class BitcoinAnchor {
             URL urlObject = new URL(completeUrl.toString());
             HttpURLConnection connection = (HttpURLConnection) urlObject.openConnection();
             connection.setRequestProperty("Content-Type", "application/json");
-            connection.setRequestProperty("Authorization", "Token token=\"" + apiKey + "\"");
+            connection.setRequestProperty("Authorization", apiKey);
             connection.setRequestProperty("User-Agent", "Mozilla/5.0 ( compatible ) ");
             connection.setRequestProperty("Accept", "*/*");
             if(method == RequestMethod.POST) {
                 connection.setRequestMethod("POST");
                 connection.setDoOutput(true);
                 DataOutputStream dos = new DataOutputStream(connection.getOutputStream());
-                dos.writeBytes(jsonRequestBody);
-                dos.close();
+                if(jsonRequestBody != null && jsonRequestBody.length() > 0) {
+                    dos.writeBytes(jsonRequestBody);
+                    dos.close();
+                }
             } else
                 connection.setRequestMethod("GET");
 

@@ -1,6 +1,9 @@
 package com.plagchain.domain;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.plagchain.database.dbobjects.PublishedWork;
+import com.plagchain.database.dbobjects.SeedSubmission;
 import com.plagchain.database.dbobjects.UnpublishedWork;
 
 import java.util.List;
@@ -13,6 +16,7 @@ import java.util.List;
 public class ResponseItem {
     private String error;
     private String success;
+    private SeedSubmission seedDetails;
     private List<PublishedWork> listOfSimilarPublishedWork;
     private List<PublishedWork> listOfSimilarImagePublishedWork;
     private List<UnpublishedWork> listOfSimilarUnpublishedWork;
@@ -32,6 +36,14 @@ public class ResponseItem {
 
     public void setSuccess(String success) {
         this.success = success;
+    }
+
+    public SeedSubmission getSeedDetails() {
+        return seedDetails;
+    }
+
+    public void setSeedDetails(SeedSubmission seedDetails) {
+        this.seedDetails = seedDetails;
     }
 
     public List<PublishedWork> getListOfSimilarPublishedWork() {
@@ -64,5 +76,11 @@ public class ResponseItem {
 
     public void setListOfSimilarImageUnpublishedWork(List<UnpublishedWork> listOfSimilarImageUnpublishedWork) {
         this.listOfSimilarImageUnpublishedWork = listOfSimilarImageUnpublishedWork;
+    }
+
+    @Override
+    public String toString() {
+        Gson gson = new GsonBuilder().create();
+        return gson.toJson(this, this.getClass());
     }
 }
