@@ -8,6 +8,7 @@ import com.plagchain.database.service.UnpublishedWorkService;
 import com.plagchain.domain.ResponseItem;
 import info.debatty.java.lsh.MinHash;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
 import java.util.ArrayList;
@@ -18,6 +19,7 @@ import java.util.TreeSet;
  * Created by Jagrut on 22-05-2017.
  * Service class which will be used by the REST to transfer the task of plagiarism detection.
  */
+@Service
 public class PlagDetectionService {
 
     @Value("${plagdetection.streamname.publishedwork}")

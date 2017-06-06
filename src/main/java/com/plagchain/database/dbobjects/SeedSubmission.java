@@ -3,6 +3,7 @@ package com.plagchain.database.dbobjects;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.TextIndexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
@@ -23,6 +24,7 @@ public class SeedSubmission implements Serializable{
     private String plagchainSeedHash;
 
     @Field("plagchain_seed")
+    @TextIndexed
     private String plagchainSeed;
 
     @Field("publishedwork")

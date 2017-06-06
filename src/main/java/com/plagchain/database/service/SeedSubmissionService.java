@@ -101,4 +101,9 @@ public class SeedSubmissionService {
         DBCollection dbCollection = mongoTemplate.getCollection("seed_submission");
         return dbCollection.find(query);
     }
+
+    public SeedSubmission findByOriginstampSeedRegex(String hash) {
+        log.info("Request to get single SeedSubmission object which contains specified hash");
+        return seedSubmissionRepository.findByOriginstampSeedRegex(hash);
+    }
 }
