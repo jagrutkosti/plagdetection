@@ -7,15 +7,15 @@ import java.util.List;
  * For parsing the data field from a stream
  */
 public class ChainData {
-    private List<String> textMinHash;
+    private List<Integer> textMinHash;
     private List<String> imageHash;
     private String contactInfo;
 
-    public List<String> getTextMinHash() {
+    public List<Integer> getTextMinHash() {
         return textMinHash;
     }
 
-    public void setTextMinHash(List<String> textMinHash) {
+    public void setTextMinHash(List<Integer> textMinHash) {
         this.textMinHash = textMinHash;
     }
 

@@ -27,7 +27,7 @@ public class UnpublishedWork implements Serializable {
 
     @NotNull
     @Field("list_minHash")
-    private List<String> listMinHash;
+    private List<Integer> listMinHash;
 
     @Field("image_list_minHash")
     private List<String> imageListMinHash;
@@ -60,11 +60,11 @@ public class UnpublishedWork implements Serializable {
         this.docHashKey = docHashKey;
     }
 
-    public List<String> getListMinHash() {
+    public List<Integer> getListMinHash() {
         return listMinHash;
     }
 
-    public void setListMinHash(List<String> listMinHash) {
+    public void setListMinHash(List<Integer> listMinHash) {
         this.listMinHash = listMinHash;
     }
 

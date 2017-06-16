@@ -6,7 +6,8 @@ import com.plagchain.database.dbobjects.UnpublishedWork;
 import com.plagchain.database.service.PublishedWorkService;
 import com.plagchain.database.service.UnpublishedWorkService;
 import com.plagchain.domain.ResponseItem;
-import info.debatty.java.lsh.MinHash;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +22,7 @@ import java.util.TreeSet;
  */
 @Service
 public class PlagDetectionService {
+    private final Logger log = LoggerFactory.getLogger(PlagDetectionService.class);
 
     @Value("${plagdetection.streamname.publishedwork}")
     private String publishedWorkStreamName;
@@ -46,8 +48,9 @@ public class PlagDetectionService {
      * @param response Object of ResponseItem that should be populated and returned
      * @return {ResponseItem} object after populating with appropriate content
      */
-    public ResponseItem runLSHAlgorithmPublishedWork(String plagCheckDocHash, List<String> plagCheckMinHashList,
+    public ResponseItem runLSHAlgorithmPublishedWork(String plagCheckDocHash, List<Integer> plagCheckMinHashList,
                                                      List<String> plagCheckImageMinHashList, ResponseItem response) {
+        log.info("Started Similarity Algorithm for Published work");
         List<PublishedWork> similarPublishedWork = new ArrayList<>();
         List<PublishedWork> similarImagePublishedWork = new ArrayList<>();
         DBCursor dbCursor = publishedWorkService.find();
@@ -78,8 +81,9 @@ public class PlagDetectionService {
      * @param response Object of ResponseItem that should be populated and returned
      * @return {ResponseItem} object after populating with appropriate content
      */
-    public ResponseItem runLSHAlgorithmUnpublishedWork(String plagCheckDocHash, List<String> plagCheckMinHashList,
+    public ResponseItem runLSHAlgorithmUnpublishedWork(String plagCheckDocHash, List<Integer> plagCheckMinHashList,
                                                        List<String> plagCheckImageMinHashList, ResponseItem response) {
+        log.info("Started Similarity Algorithm for Unpublished work");
         List<UnpublishedWork> similarUnpublishedWork = new ArrayList<>();
         List<UnpublishedWork> similarImageUnpublishedWork = new ArrayList<>();
         DBCursor dbCursor = unpublishedWorkService.find();
@@ -107,17 +111,22 @@ public class PlagDetectionService {
      * @param plagCheckMinHashList the list of min hash from test document
      * @return {double} Similarity score between 0-1
      */
-    public double MinHashAlgorithm(List<String> minHashListDB, List<String> plagCheckMinHashList) {
-        MinHash minHash = new MinHash(0.1, 200);
-        TreeSet<Integer> setDB = new TreeSet<>();
-        TreeSet<Integer> setPlagCheck = new TreeSet<>();
-        for(String hash : minHashListDB)
-            setDB.add(Integer.parseInt(hash));
-        for(String hash : plagCheckMinHashList)
-            setPlagCheck.add(Integer.parseInt(hash));
-        int[] sigDB = minHash.signature(setDB);
-        int[] sigPlagCheck = minHash.signature(setPlagCheck);
-        return minHash.similarity(sigDB, sigPlagCheck);
+    public double MinHashAlgorithm(List<Integer> minHashListDB, List<Integer> plagCheckMinHashList) {
+        log.info("Comparing MinHash for similarity");
+        if(minHashListDB.size() != plagCheckMinHashList.size()) {
+            log.error("Size of signatures should be the same");
+            return 0.0D;
+        } else {
+            double sim = 0.0D;
+
+            for(int i = 0; i < minHashListDB.size(); ++i) {
+                if(minHashListDB.get(i).intValue() == plagCheckMinHashList.get(i).intValue()) {
+                    ++sim;
+                }
+            }
+
+            return sim / (double)minHashListDB.size();
+        }
     }
 
     /**
@@ -127,6 +136,7 @@ public class PlagDetectionService {
      * @return {boolean} if DB contains any SHA-256 hash for the image hash in test document
      */
     public boolean ImageSimilarityCheck(List<String> imageMinHashListDB, List<String> plagCheckImageMinHashList) {
+        log.info("Checking for image similarity");
         for(String singlePlagCheckImageHash: plagCheckImageMinHashList) {
             for(String singleDBImageHash: imageMinHashListDB) {
                 if (singlePlagCheckImageHash.equals(singleDBImageHash))

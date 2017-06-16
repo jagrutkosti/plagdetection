@@ -52,7 +52,7 @@ public class PlagCheckREST {
      */
     @RequestMapping(path = "/runMinHashAlgo", method = RequestMethod.POST)
     public ResponseItem runMinHashAlgo(@RequestParam("docHash")String docHash,
-                                       @RequestParam("textHashList") List<String> textHashList,
+                                       @RequestParam("textHashList") List<Integer> textHashList,
                                        @RequestParam("imageHashList") List<String> imageHashList,
                                        @RequestParam("checkUnpublishedWorkStream") boolean checkUnpublishedWorkStream) {
         log.info("REST request to run Min Hash algorithm for hash: {}", docHash);

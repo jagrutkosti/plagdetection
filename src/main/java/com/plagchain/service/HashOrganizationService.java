@@ -204,7 +204,8 @@ public class HashOrganizationService {
      * @return {Object} w.r.t dbObject after updating with min hashes
      */
     private Object addMinHashToDbObject(List<StreamItem> addToDatabase, Object dbObject) {
-        List<String> minHashList = new ArrayList<>();
+        log.info("Adding MinHash from Blockchain stream item to DB object");
+        List<Integer> minHashList = new ArrayList<>();
         List<String> imageMinHashList = new ArrayList<>();
         String contactInfo = "";
         for (StreamItem minHash : addToDatabase) {
@@ -238,6 +239,7 @@ public class HashOrganizationService {
      * @return {ChainData} object containing relevant information
      */
     private ChainData transformDataFromHexToObject(String dataInHex) {
+        log.info("Transforming hex data: {}", dataInHex);
         String dataInString = new String(DatatypeConverter.parseHexBinary(dataInHex));
         Gson gson = new Gson();
         return gson.fromJson(dataInString,ChainData.class);

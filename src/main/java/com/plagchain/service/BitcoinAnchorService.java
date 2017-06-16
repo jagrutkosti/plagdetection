@@ -66,6 +66,10 @@ public class BitcoinAnchorService {
     private MongoTemplate mongoTemplate;
     private ObjectMapper objectMapper;
 
+    /**
+     * Scheduled task to run which triggers other methods in this class
+     * @throws IOException
+     */
     @Scheduled(initialDelay = 10000, fixedRateString = "${plagdetection.hash.anchor.timeinterval}")
     public void startAnchoring() throws IOException {
         mongoTemplate = new MongoTemplate(new SimpleMongoDbFactory(new MongoClient(), databaseName));
@@ -162,7 +166,8 @@ public class BitcoinAnchorService {
     }
 
     /**
-     * Method to anchor transactions into Bitcoin.
+     * Anchor transactions into Bitcoin. Create " " separated seed of SHA-256 hash of all documents, then hash the seed
+     * and submit the SHA-256 hash of the seed to the Originstamp server
      * @param isPublishedWorkStream set to true if anchoring is done for published work stream
      */
     public void anchorNewTransanctionToBitcoin(boolean isPublishedWorkStream) {
@@ -220,6 +225,7 @@ public class BitcoinAnchorService {
      * @return {String} Hash string generated
      */
     public String generateSHA256HashFromString(String seed) {
+        log.info("Generating SHA-256 hash for: {}", seed);
         StringBuilder seedHash = new StringBuilder();
         try {
             MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
@@ -250,6 +256,7 @@ public class BitcoinAnchorService {
     public String dataTransferOriginstamp (RequestMethod method, String endpoint,
                                            boolean hasRequestParam, String hashStringRequestParam,
                                            String jsonRequestBody){
+        log.info("Transferring data to Originstamp server");
         StringBuilder completeUrl = new StringBuilder(apiUrl);
         completeUrl.append(endpoint);
         if(hasRequestParam)
