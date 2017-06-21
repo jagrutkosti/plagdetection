@@ -45,15 +45,6 @@ import java.util.StringJoiner;
 public class BitcoinAnchorService {
     private final Logger log = LoggerFactory.getLogger(BitcoinAnchorService.class);
 
-    @Inject
-    private PublishedWorkService publishedWorkService;
-
-    @Inject
-    private UnpublishedWorkService unpublishedWorkService;
-
-    @Inject
-    private SeedSubmissionService seedSubmissionService;
-
     @Value("${originstamp.api.url}")
     private String apiUrl;
 
@@ -63,9 +54,19 @@ public class BitcoinAnchorService {
     @Value("${spring.data.mongodb.database}")
     private String databaseName;
 
+    private PublishedWorkService publishedWorkService;
+    private UnpublishedWorkService unpublishedWorkService;
+    private SeedSubmissionService seedSubmissionService;
+
     private MongoTemplate mongoTemplate;
     private ObjectMapper objectMapper;
 
+    public BitcoinAnchorService(PublishedWorkService publishedWorkService, UnpublishedWorkService unpublishedWorkService,
+                                SeedSubmissionService seedSubmissionService) {
+        this.publishedWorkService = publishedWorkService;
+        this.unpublishedWorkService = unpublishedWorkService;
+        this.seedSubmissionService = seedSubmissionService;
+    }
     /**
      * Scheduled task to run which triggers other methods in this class
      * @throws IOException

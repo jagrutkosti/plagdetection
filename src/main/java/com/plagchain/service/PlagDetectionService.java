@@ -1,6 +1,9 @@
 package com.plagchain.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
 import com.mongodb.DBCursor;
+import com.mongodb.MongoClient;
 import com.plagchain.database.dbobjects.PublishedWork;
 import com.plagchain.database.dbobjects.UnpublishedWork;
 import com.plagchain.database.service.PublishedWorkService;
@@ -9,12 +12,11 @@ import com.plagchain.domain.ResponseItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 import org.springframework.stereotype.Service;
 
-import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.TreeSet;
+import java.util.*;
 
 /**
  * Created by Jagrut on 22-05-2017.
@@ -33,38 +35,44 @@ public class PlagDetectionService {
     @Value("${plagdetection.algorithm.threshold}")
     private double algoThreshold;
 
-    @Inject
-    private PublishedWorkService publishedWorkService;
+    @Value("${spring.data.mongodb.database}")
+    private String databaseName;
 
-    @Inject
+    private PublishedWorkService publishedWorkService;
     private UnpublishedWorkService unpublishedWorkService;
+    private MongoTemplate mongoTemplate;
+    private ObjectMapper objectMapper;
+
+    public PlagDetectionService(PublishedWorkService publishedWorkService, UnpublishedWorkService unpublishedWorkService) {
+        this.publishedWorkService = publishedWorkService;
+        this.unpublishedWorkService = unpublishedWorkService;
+    }
 
     /**
      * Find similar items for test document in the present collection of PublishedWork min hash list in the Blockchain
      * that are confirmed and stored in DB.
-     * @param plagCheckDocHash the overall document SHA-256 hash for uniquely identifying the document
      * @param plagCheckMinHashList list of min hash values from text whose signatures are not yet calculated
      * @param plagCheckImageMinHashList list of min hash values from image whose signatures are not yet calculated
      * @param response Object of ResponseItem that should be populated and returned
      * @return {ResponseItem} object after populating with appropriate content
      */
-    public ResponseItem runLSHAlgorithmPublishedWork(String plagCheckDocHash, List<Integer> plagCheckMinHashList,
+    public ResponseItem runLSHAlgorithmPublishedWork(List<Integer> plagCheckMinHashList,
                                                      List<String> plagCheckImageMinHashList, ResponseItem response) {
         log.info("Started Similarity Algorithm for Published work");
-        List<PublishedWork> similarPublishedWork = new ArrayList<>();
+        initializeMongoConverter();
+        Map<PublishedWork, Double> similarPublishedWork = new HashMap<>();
         List<PublishedWork> similarImagePublishedWork = new ArrayList<>();
         DBCursor dbCursor = publishedWorkService.find();
         while(dbCursor.hasNext()) {
-            PublishedWork singleDocumentDB = (PublishedWork) dbCursor.next();
-            if(singleDocumentDB.getDocHashKey().equals(plagCheckDocHash)) {
-                response.setError("Database already contains the exact document.");
-                return response;
-            }
-            if(plagCheckImageMinHashList.size() > 0)
+            PublishedWork singleDocumentDB = mongoTemplate.getConverter().read(PublishedWork.class, dbCursor.next());
+            if(plagCheckImageMinHashList.size() > 0) {
                 if(ImageSimilarityCheck(singleDocumentDB.getImageListMinHash(), plagCheckImageMinHashList))
                     similarImagePublishedWork.add(singleDocumentDB);
-            if(MinHashAlgorithm(singleDocumentDB.getListMinHash(), plagCheckMinHashList) > algoThreshold)
-                similarPublishedWork.add(singleDocumentDB);
+            }
+            double similarityScore = MinHashAlgorithm(singleDocumentDB.getListMinHash(), plagCheckMinHashList);
+            if(similarityScore > algoThreshold) {
+                similarPublishedWork.put(singleDocumentDB, similarityScore);
+            }
         }
         response.setListOfSimilarImagePublishedWork(similarImagePublishedWork);
         response.setListOfSimilarPublishedWork(similarPublishedWork);
@@ -75,29 +83,29 @@ public class PlagDetectionService {
     /**
      * Find similar items for test document in the present collection of UnpublishedWork min hash list in the Blockchain
      * that are confirmed and stored in DB.
-     * @param plagCheckDocHash the overall document SHA-256 hash for uniquely identifying the document
      * @param plagCheckMinHashList list of min hash values from text whose signatures are not yet calculated
      * @param plagCheckImageMinHashList list of min hash values from image whose signatures are not yet calculated
      * @param response Object of ResponseItem that should be populated and returned
      * @return {ResponseItem} object after populating with appropriate content
      */
-    public ResponseItem runLSHAlgorithmUnpublishedWork(String plagCheckDocHash, List<Integer> plagCheckMinHashList,
+    public ResponseItem runLSHAlgorithmUnpublishedWork(List<Integer> plagCheckMinHashList,
                                                        List<String> plagCheckImageMinHashList, ResponseItem response) {
         log.info("Started Similarity Algorithm for Unpublished work");
-        List<UnpublishedWork> similarUnpublishedWork = new ArrayList<>();
+        initializeMongoConverter();
+        Map<UnpublishedWork, Double> similarUnpublishedWork = new HashMap<>();
         List<UnpublishedWork> similarImageUnpublishedWork = new ArrayList<>();
         DBCursor dbCursor = unpublishedWorkService.find();
         while(dbCursor.hasNext()) {
-            UnpublishedWork singleDocumentDB = (UnpublishedWork) dbCursor.next();
-            if(singleDocumentDB.getDocHashKey().equals(plagCheckDocHash)) {
-                response.setError("Database already contains the exact document.");
-                return response;
-            }
-            if(plagCheckImageMinHashList.size() > 0)
+            UnpublishedWork singleDocumentDB = mongoTemplate.getConverter().read(UnpublishedWork.class, dbCursor.next());
+            if(plagCheckImageMinHashList.size() > 0) {
                 if(ImageSimilarityCheck(singleDocumentDB.getImageListMinHash(), plagCheckImageMinHashList))
                     similarImageUnpublishedWork.add(singleDocumentDB);
-            if(MinHashAlgorithm(singleDocumentDB.getListMinHash(), plagCheckMinHashList) > algoThreshold)
-                similarUnpublishedWork.add(singleDocumentDB);
+            }
+
+            double similarityScore = MinHashAlgorithm(singleDocumentDB.getListMinHash(), plagCheckMinHashList);
+            if(similarityScore > algoThreshold) {
+                similarUnpublishedWork.put(singleDocumentDB, similarityScore);
+            }
         }
         response.setListOfSimilarImageUnpublishedWork(similarImageUnpublishedWork);
         response.setListOfSimilarUnpublishedWork(similarUnpublishedWork);
@@ -124,7 +132,6 @@ public class PlagDetectionService {
                     ++sim;
                 }
             }
-
             return sim / (double)minHashListDB.size();
         }
     }
@@ -144,5 +151,15 @@ public class PlagDetectionService {
             }
         }
         return false;
+    }
+
+    /**
+     * Initializes mongo converter to be used by other methods to type cast the db cursor into required Java objects
+     */
+    public void initializeMongoConverter() {
+        mongoTemplate = new MongoTemplate(new SimpleMongoDbFactory(new MongoClient(), databaseName));
+        JaxbAnnotationModule jaxbAnnotationModule = new JaxbAnnotationModule();
+        objectMapper = new ObjectMapper();
+        objectMapper.registerModule(jaxbAnnotationModule);
     }
 }

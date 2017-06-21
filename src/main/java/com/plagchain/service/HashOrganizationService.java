@@ -41,12 +41,13 @@ public class HashOrganizationService {
     @Value("${plagdetection.streamname.unpublishedwork}")
     private String unpublishedWorkStreamName;
 
-    @Inject
     private PublishedWorkService publishedWorkService;
-
-    @Inject
     private UnpublishedWorkService unpublishedWorkService;
 
+    public HashOrganizationService(PublishedWorkService publishedWorkService, UnpublishedWorkService unpublishedWorkService) {
+        this.publishedWorkService = publishedWorkService;
+        this.unpublishedWorkService = unpublishedWorkService;
+    }
     /**
      * Run this method after every $time milliseconds mentioned in application.properties file
      */
@@ -211,9 +212,12 @@ public class HashOrganizationService {
         for (StreamItem minHash : addToDatabase) {
             try {
                 ChainData chainData = transformDataFromHexToObject(minHash.getData());
-                imageMinHashList.addAll(chainData.getImageHash());
-                minHashList.addAll(chainData.getTextMinHash());
-                contactInfo = chainData.getContactInfo();
+                if(chainData.getTextMinHash() != null)
+                    minHashList.addAll(chainData.getTextMinHash());
+                if(chainData.getImageHash() != null)
+                    imageMinHashList.addAll(chainData.getImageHash());
+                if(chainData.getContactInfo() != null)
+                    contactInfo = chainData.getContactInfo();
             } catch (Exception e) {
                 e.printStackTrace();
             }

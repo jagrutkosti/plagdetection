@@ -7,6 +7,7 @@ import com.plagchain.database.dbobjects.SeedSubmission;
 import com.plagchain.database.dbobjects.UnpublishedWork;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by Jagrut on 29-05-2017.
@@ -17,9 +18,9 @@ public class ResponseItem {
     private String error;
     private String success;
     private SeedSubmission seedDetails;
-    private List<PublishedWork> listOfSimilarPublishedWork;
+    private Map<PublishedWork, Double> listOfSimilarPublishedWork;
     private List<PublishedWork> listOfSimilarImagePublishedWork;
-    private List<UnpublishedWork> listOfSimilarUnpublishedWork;
+    private Map<UnpublishedWork, Double> listOfSimilarUnpublishedWork;
     private List<UnpublishedWork> listOfSimilarImageUnpublishedWork;
 
     public String getError() {
@@ -46,19 +47,19 @@ public class ResponseItem {
         this.seedDetails = seedDetails;
     }
 
-    public List<PublishedWork> getListOfSimilarPublishedWork() {
+    public Map<PublishedWork, Double> getListOfSimilarPublishedWork() {
         return listOfSimilarPublishedWork;
     }
 
-    public void setListOfSimilarPublishedWork(List<PublishedWork> listOfSimilarPublishedWork) {
+    public void setListOfSimilarPublishedWork(Map<PublishedWork, Double> listOfSimilarPublishedWork) {
         this.listOfSimilarPublishedWork = listOfSimilarPublishedWork;
     }
 
-    public List<UnpublishedWork> getListOfSimilarUnpublishedWork() {
+    public Map<UnpublishedWork, Double> getListOfSimilarUnpublishedWork() {
         return listOfSimilarUnpublishedWork;
     }
 
-    public void setListOfSimilarUnpublishedWork(List<UnpublishedWork> listOfSimilarUnpublishedWork) {
+    public void setListOfSimilarUnpublishedWork(Map<UnpublishedWork, Double> listOfSimilarUnpublishedWork) {
         this.listOfSimilarUnpublishedWork = listOfSimilarUnpublishedWork;
     }
 

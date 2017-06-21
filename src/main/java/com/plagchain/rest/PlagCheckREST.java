@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.inject.Inject;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Created by Jagrut on 27-04-2017.
@@ -21,12 +23,13 @@ import java.util.List;
 public class PlagCheckREST {
 
     private final Logger log = LoggerFactory.getLogger(PlagCheckREST.class);
-
-    @Inject
     private PlagDetectionService plagDetectionService;
-
-    @Inject
     private UtilService utilService;
+
+    public PlagCheckREST(PlagDetectionService plagDetectionService, UtilService utilService) {
+        this.plagDetectionService = plagDetectionService;
+        this.utilService = utilService;
+    }
 
     /**
      * REST method to fetch the seed for a given hash and all corresponding details
@@ -44,22 +47,20 @@ public class PlagCheckREST {
 
     /**
      * REST method to run the Min Hash algorithm
-     * @param docHash the SHA256 hash of the document
      * @param textHashList list of min hash values for text in the document
      * @param imageHashList list of min hash values for images in the document
      * @param checkUnpublishedWorkStream set to true if user wish to check in unpublishedwork stream as well
      * @return {ResponseItem} object containing all documents that were similar to the hashes submitted
      */
     @RequestMapping(path = "/runMinHashAlgo", method = RequestMethod.POST)
-    public ResponseItem runMinHashAlgo(@RequestParam("docHash")String docHash,
-                                       @RequestParam("textHashList") List<Integer> textHashList,
+    public ResponseItem runMinHashAlgo(@RequestBody @RequestParam("textHashList") List<Integer> textHashList,
                                        @RequestParam("imageHashList") List<String> imageHashList,
                                        @RequestParam("checkUnpublishedWorkStream") boolean checkUnpublishedWorkStream) {
-        log.info("REST request to run Min Hash algorithm for hash: {}", docHash);
+        log.info("REST request to run Min Hash algorithm");
         ResponseItem responseItem = new ResponseItem();
-        responseItem = plagDetectionService.runLSHAlgorithmPublishedWork(docHash, textHashList, imageHashList, responseItem);
+        responseItem = plagDetectionService.runLSHAlgorithmPublishedWork(textHashList, imageHashList, responseItem);
         if (checkUnpublishedWorkStream)
-            responseItem = plagDetectionService.runLSHAlgorithmUnpublishedWork(docHash, textHashList, imageHashList, responseItem);
+            responseItem = plagDetectionService.runLSHAlgorithmUnpublishedWork(textHashList, imageHashList, responseItem);
         return responseItem;
     }
 }
