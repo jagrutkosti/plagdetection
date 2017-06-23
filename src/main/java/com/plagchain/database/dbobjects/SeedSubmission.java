@@ -17,6 +17,8 @@ import java.util.Objects;
 @Document(collection = "seed_submission")
 public class SeedSubmission implements Serializable{
 
+    private static final long serialVersionUID = 1L;
+
     @Id
     private String id;
 

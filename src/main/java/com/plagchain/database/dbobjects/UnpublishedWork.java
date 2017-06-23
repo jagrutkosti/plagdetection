@@ -18,12 +18,17 @@ import java.util.Objects;
 
 @Document(collection = "unpublished_work")
 public class UnpublishedWork implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     @Id
     private String id;
 
     @NotNull
     @Field("doc_hash")
     private String docHashKey;
+
+    @Field("file_name")
+    private String fileName;
 
     @NotNull
     @Field("list_minHash")
@@ -58,6 +63,14 @@ public class UnpublishedWork implements Serializable {
 
     public void setDocHashKey(String docHashKey) {
         this.docHashKey = docHashKey;
+    }
+
+    public String getFileName() {
+        return fileName;
+    }
+
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
     }
 
     public List<Integer> getListMinHash() {

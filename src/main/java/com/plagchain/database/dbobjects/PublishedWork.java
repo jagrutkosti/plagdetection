@@ -29,6 +29,9 @@ public class PublishedWork implements Serializable {
     @Field("doc_hash")
     private String docHashKey;
 
+    @Field("file_name")
+    private String fileName;
+
     @NotNull
     @Field("list_minHash")
     private List<Integer> listMinHash;
@@ -70,6 +73,14 @@ public class PublishedWork implements Serializable {
 
     public void setListMinHash(List<Integer> listMinHash) {
         this.listMinHash = listMinHash;
+    }
+
+    public String getFileName() {
+        return fileName;
+    }
+
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
     }
 
     public List<String> getImageListMinHash() {

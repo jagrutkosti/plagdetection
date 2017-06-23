@@ -206,6 +206,7 @@ public class HashOrganizationService {
      */
     private Object addMinHashToDbObject(List<StreamItem> addToDatabase, Object dbObject) {
         log.info("Adding MinHash from Blockchain stream item to DB object");
+        String fileName = "";
         List<Integer> minHashList = new ArrayList<>();
         List<String> imageMinHashList = new ArrayList<>();
         String contactInfo = "";
@@ -218,6 +219,8 @@ public class HashOrganizationService {
                     imageMinHashList.addAll(chainData.getImageHash());
                 if(chainData.getContactInfo() != null)
                     contactInfo = chainData.getContactInfo();
+                if(chainData.getFileName() != null)
+                    fileName = chainData.getFileName();
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -227,12 +230,14 @@ public class HashOrganizationService {
             publishedWorkObject.setListMinHash(minHashList);
             publishedWorkObject.setImageListMinHash(imageMinHashList);
             publishedWorkObject.setContactInfo(contactInfo);
+            publishedWorkObject.setFileName(fileName);
             return  publishedWorkObject;
         } else {
             UnpublishedWork unpublishedWorkObject = (UnpublishedWork) dbObject;
             unpublishedWorkObject.setListMinHash(minHashList);
             unpublishedWorkObject.setImageListMinHash(imageMinHashList);
             unpublishedWorkObject.setContactInfo(contactInfo);
+            unpublishedWorkObject.setFileName(fileName);
             return unpublishedWorkObject;
         }
     }

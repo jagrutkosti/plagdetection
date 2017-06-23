@@ -7,9 +7,18 @@ import java.util.List;
  * For parsing the data field from a stream
  */
 public class ChainData {
+    private String fileName;
     private List<Integer> textMinHash;
     private List<String> imageHash;
     private String contactInfo;
+
+    public String getFileName() {
+        return fileName;
+    }
+
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
+    }
 
     public List<Integer> getTextMinHash() {
         return textMinHash;

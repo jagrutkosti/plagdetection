@@ -120,14 +120,13 @@ public class PlagDetectionService {
      * @return {double} Similarity score between 0-1
      */
     public double MinHashAlgorithm(List<Integer> minHashListDB, List<Integer> plagCheckMinHashList) {
-        log.info("Comparing MinHash for similarity");
         if(minHashListDB.size() != plagCheckMinHashList.size()) {
             log.error("Size of signatures should be the same");
             return 0.0D;
         } else {
             double sim = 0.0D;
 
-            for(int i = 0; i < minHashListDB.size(); ++i) {
+            for(int i = 0; i < minHashListDB.size(); i++) {
                 if(minHashListDB.get(i).intValue() == plagCheckMinHashList.get(i).intValue()) {
                     ++sim;
                 }
@@ -143,7 +142,6 @@ public class PlagDetectionService {
      * @return {boolean} if DB contains any SHA-256 hash for the image hash in test document
      */
     public boolean ImageSimilarityCheck(List<String> imageMinHashListDB, List<String> plagCheckImageMinHashList) {
-        log.info("Checking for image similarity");
         for(String singlePlagCheckImageHash: plagCheckImageMinHashList) {
             for(String singleDBImageHash: imageMinHashListDB) {
                 if (singlePlagCheckImageHash.equals(singleDBImageHash))

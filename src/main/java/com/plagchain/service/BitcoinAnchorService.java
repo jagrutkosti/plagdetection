@@ -148,7 +148,7 @@ public class BitcoinAnchorService {
                         singleDocument.setOriginstampBtcAddress(responseSingleHashObject.getMultiSeed().getBitcoinAddress());
 
                         //Get seed for this hash
-                        if(singleDocument.getOriginstampSeed().length() > 0) {
+                        if(singleDocument.getOriginstampSeed() != null && singleDocument.getOriginstampSeed().length() > 0) {
                             String originstampSeed = dataTransferOriginstamp(RequestMethod.GET, "download/seed/", true, singleResponseItem.getHashString(), null);
                             singleDocument.setOriginstampSeed(originstampSeed);
                         }
