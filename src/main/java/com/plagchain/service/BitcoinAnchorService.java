@@ -111,7 +111,6 @@ public class BitcoinAnchorService {
             String responseMultiHash = dataTransferOriginstamp(RequestMethod.POST, "table", false, null, requestBody);
             //Parse the response into object and extract only the hashes array and add them to our list of hashes.
             OriginStampTableEntity responseObject = objectMapper.readValue(responseMultiHash, OriginStampTableEntity.class);
-            System.out.println(responseMultiHash);
 
             sizeOfReceivedHashes = responseObject.getHashes().size();
             allHashesForComparison.addAll(responseObject.getHashes());
@@ -148,8 +147,10 @@ public class BitcoinAnchorService {
                         singleDocument.setOriginstampBtcAddress(responseSingleHashObject.getMultiSeed().getBitcoinAddress());
 
                         //Get seed for this hash
-                        if(singleDocument.getOriginstampSeed() != null && singleDocument.getOriginstampSeed().length() > 0) {
+                        if(singleDocument.getOriginstampSeed() == null || singleDocument.getOriginstampSeed().length() <= 0) {
+                            System.out.println("sinside");
                             String originstampSeed = dataTransferOriginstamp(RequestMethod.GET, "download/seed/", true, singleResponseItem.getHashString(), null);
+                            System.out.println(originstampSeed);
                             singleDocument.setOriginstampSeed(originstampSeed);
                         }
                         seedSubmissionService.save(singleDocument);
