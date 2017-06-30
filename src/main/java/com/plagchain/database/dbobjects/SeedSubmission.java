@@ -35,6 +35,9 @@ public class SeedSubmission implements Serializable{
     @Field("originstamp_seed_address")
     private String originstampBtcAddress;
 
+    @Field("originstamp_tx_hash")
+    private String originstampTransactionHash;
+
     @Field("originstamp_seed")
     private String originstampSeed;
 
@@ -106,6 +109,14 @@ public class SeedSubmission implements Serializable{
 
     public void setOriginstampBitcoinConfirmTime(String originstampBitcoinConfirmTime) {
         this.originstampBitcoinConfirmTime = originstampBitcoinConfirmTime;
+    }
+
+    public String getOriginstampTransactionHash() {
+        return originstampTransactionHash;
+    }
+
+    public void setOriginstampTransactionHash(String originstampTransactionHash) {
+        this.originstampTransactionHash = originstampTransactionHash;
     }
 
     @Override

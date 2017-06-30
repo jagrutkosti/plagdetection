@@ -18,9 +18,9 @@ public class ResponseItem {
     private String error;
     private String success;
     private SeedSubmission seedDetails;
-    private Map<PublishedWork, Double> listOfSimilarPublishedWork;
+    private List<SimilarDocument> listOfSimilarPublishedWork;
     private List<PublishedWork> listOfSimilarImagePublishedWork;
-    private Map<UnpublishedWork, Double> listOfSimilarUnpublishedWork;
+    private List<SimilarDocument> listOfSimilarUnpublishedWork;
     private List<UnpublishedWork> listOfSimilarImageUnpublishedWork;
 
     public String getError() {
@@ -47,19 +47,19 @@ public class ResponseItem {
         this.seedDetails = seedDetails;
     }
 
-    public Map<PublishedWork, Double> getListOfSimilarPublishedWork() {
+    public List<SimilarDocument> getListOfSimilarPublishedWork() {
         return listOfSimilarPublishedWork;
     }
 
-    public void setListOfSimilarPublishedWork(Map<PublishedWork, Double> listOfSimilarPublishedWork) {
+    public void setListOfSimilarPublishedWork(List<SimilarDocument> listOfSimilarPublishedWork) {
         this.listOfSimilarPublishedWork = listOfSimilarPublishedWork;
     }
 
-    public Map<UnpublishedWork, Double> getListOfSimilarUnpublishedWork() {
+    public List<SimilarDocument> getListOfSimilarUnpublishedWork() {
         return listOfSimilarUnpublishedWork;
     }
 
-    public void setListOfSimilarUnpublishedWork(Map<UnpublishedWork, Double> listOfSimilarUnpublishedWork) {
+    public void setListOfSimilarUnpublishedWork(List<SimilarDocument> listOfSimilarUnpublishedWork) {
         this.listOfSimilarUnpublishedWork = listOfSimilarUnpublishedWork;
     }
 

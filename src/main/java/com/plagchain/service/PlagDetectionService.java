@@ -9,6 +9,7 @@ import com.plagchain.database.dbobjects.UnpublishedWork;
 import com.plagchain.database.service.PublishedWorkService;
 import com.plagchain.database.service.UnpublishedWorkService;
 import com.plagchain.domain.ResponseItem;
+import com.plagchain.domain.SimilarDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -60,7 +61,7 @@ public class PlagDetectionService {
                                                      List<String> plagCheckImageMinHashList, ResponseItem response) {
         log.info("Started Similarity Algorithm for Published work");
         initializeMongoConverter();
-        Map<PublishedWork, Double> similarPublishedWork = new HashMap<>();
+        List<SimilarDocument> similarPublishedWork = new ArrayList<>();
         List<PublishedWork> similarImagePublishedWork = new ArrayList<>();
         DBCursor dbCursor = publishedWorkService.find();
         while(dbCursor.hasNext()) {
@@ -71,7 +72,7 @@ public class PlagDetectionService {
             }
             double similarityScore = MinHashAlgorithm(singleDocumentDB.getListMinHash(), plagCheckMinHashList);
             if(similarityScore > algoThreshold) {
-                similarPublishedWork.put(singleDocumentDB, similarityScore);
+                similarPublishedWork.add(setFields(singleDocumentDB, similarityScore));
             }
         }
         response.setListOfSimilarImagePublishedWork(similarImagePublishedWork);
@@ -92,7 +93,7 @@ public class PlagDetectionService {
                                                        List<String> plagCheckImageMinHashList, ResponseItem response) {
         log.info("Started Similarity Algorithm for Unpublished work");
         initializeMongoConverter();
-        Map<UnpublishedWork, Double> similarUnpublishedWork = new HashMap<>();
+        List<SimilarDocument> similarUnpublishedWork = new ArrayList<>();
         List<UnpublishedWork> similarImageUnpublishedWork = new ArrayList<>();
         DBCursor dbCursor = unpublishedWorkService.find();
         while(dbCursor.hasNext()) {
@@ -104,7 +105,7 @@ public class PlagDetectionService {
 
             double similarityScore = MinHashAlgorithm(singleDocumentDB.getListMinHash(), plagCheckMinHashList);
             if(similarityScore > algoThreshold) {
-                similarUnpublishedWork.put(singleDocumentDB, similarityScore);
+                similarUnpublishedWork.add(setFields(singleDocumentDB, similarityScore));
             }
         }
         response.setListOfSimilarImageUnpublishedWork(similarImageUnpublishedWork);
@@ -159,5 +160,34 @@ public class PlagDetectionService {
         JaxbAnnotationModule jaxbAnnotationModule = new JaxbAnnotationModule();
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(jaxbAnnotationModule);
+    }
+
+    /**
+     * Set the field for similar document object from either PublishedWork or UnpublishedWork Object
+     * @param dbItem PublishedWork or UnpublishedWork object
+     * @param similarityScore similarity score to set for this document
+     * @return SimilarDocument object with populated fields
+     */
+    public SimilarDocument setFields (Object dbItem, double similarityScore) {
+        SimilarDocument addDoc = new SimilarDocument();
+        PublishedWork publishedWork;
+        UnpublishedWork unpublishedWork;
+        addDoc.setSimilarityScore(similarityScore);
+        if (dbItem instanceof PublishedWork) {
+            publishedWork = (PublishedWork) dbItem;
+            addDoc.setFileName(publishedWork.getFileName());
+            addDoc.setDocumentHash(publishedWork.getDocHashKey());
+            addDoc.setContactInfo(publishedWork.getContactInfo());
+            addDoc.setPublisherWalletAddress(publishedWork.getPublisherAddress());
+            addDoc.setTimestamp(publishedWork.getTimestamp());
+        } else {
+            unpublishedWork = (UnpublishedWork) dbItem;
+            addDoc.setFileName(unpublishedWork.getFileName());
+            addDoc.setDocumentHash(unpublishedWork.getDocHashKey());
+            addDoc.setContactInfo(unpublishedWork.getContactInfo());
+            addDoc.setPublisherWalletAddress(unpublishedWork.getPublisherAddress());
+            addDoc.setTimestamp(unpublishedWork.getTimestamp());
+        }
+        return addDoc;
     }
 }

@@ -139,18 +139,17 @@ public class BitcoinAnchorService {
 
                     if(singleResponseItem.getSubmitStatus().getMultiSeed() != null && singleResponseItem.getSubmitStatus().getMultiSeed() > 1) {
                         singleDocument.setOriginstampConfirmed(singleResponseItem.getSubmitStatus().getMultiSeed());
-                        singleDocument.setOriginstampBitcoinConfirmTime(singleResponseItem.getDateCreated());
 
                         //Get bitcoin address to which the transaction was made. This address can be used to search the bitcoin blockchain
                         String responseSingleHash = dataTransferOriginstamp(RequestMethod.GET, "", true, singleResponseItem.getHashString(), null);
                         OriginStampHash responseSingleHashObject = objectMapper.readValue(responseSingleHash, OriginStampHash.class);
                         singleDocument.setOriginstampBtcAddress(responseSingleHashObject.getMultiSeed().getBitcoinAddress());
+                        singleDocument.setOriginstampTransactionHash(responseSingleHashObject.getMultiSeed().getTransactionHash());
+                        singleDocument.setOriginstampBitcoinConfirmTime(responseSingleHashObject.getMultiSeed().getTimestamp().toString());
 
                         //Get seed for this hash
                         if(singleDocument.getOriginstampSeed() == null || singleDocument.getOriginstampSeed().length() <= 0) {
-                            System.out.println("sinside");
                             String originstampSeed = dataTransferOriginstamp(RequestMethod.GET, "download/seed/", true, singleResponseItem.getHashString(), null);
-                            System.out.println(originstampSeed);
                             singleDocument.setOriginstampSeed(originstampSeed);
                         }
                         seedSubmissionService.save(singleDocument);
