@@ -6,4 +6,7 @@ plagdetection is plagiarism detection(PD) module that implements min-hash techni
 This module creates min-hashes whenever a user chooses to use this PD algorithm for document timestamps and PD.
 
 This module runs its own server and has its own MongoDB where it organizes the hashes from Plagchain (custom blockchain used for this project) for faster PD.
-  
+
+[plagUI][] uses this for PD.  
+
+[plagUI]: https://github.com/jagrutkosti/plagUI
