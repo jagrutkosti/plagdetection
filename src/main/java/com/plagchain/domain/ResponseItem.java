@@ -2,12 +2,10 @@ package com.plagchain.domain;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.plagchain.database.dbobjects.PublishedWork;
+import com.plagchain.database.dbobjects.MinHashFeatures;
 import com.plagchain.database.dbobjects.SeedSubmission;
-import com.plagchain.database.dbobjects.UnpublishedWork;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by Jagrut on 29-05-2017.
@@ -18,10 +16,7 @@ public class ResponseItem {
     private String error;
     private String success;
     private SeedSubmission seedDetails;
-    private List<SimilarDocument> listOfSimilarPublishedWork;
-    private List<PublishedWork> listOfSimilarImagePublishedWork;
-    private List<SimilarDocument> listOfSimilarUnpublishedWork;
-    private List<UnpublishedWork> listOfSimilarImageUnpublishedWork;
+    private List<SimilarDocument> listOfSimilarDocuments;
 
     public String getError() {
         return error;
@@ -47,36 +42,12 @@ public class ResponseItem {
         this.seedDetails = seedDetails;
     }
 
-    public List<SimilarDocument> getListOfSimilarPublishedWork() {
-        return listOfSimilarPublishedWork;
+    public List<SimilarDocument> getListOfSimilarDocuments() {
+        return listOfSimilarDocuments;
     }
 
-    public void setListOfSimilarPublishedWork(List<SimilarDocument> listOfSimilarPublishedWork) {
-        this.listOfSimilarPublishedWork = listOfSimilarPublishedWork;
-    }
-
-    public List<SimilarDocument> getListOfSimilarUnpublishedWork() {
-        return listOfSimilarUnpublishedWork;
-    }
-
-    public void setListOfSimilarUnpublishedWork(List<SimilarDocument> listOfSimilarUnpublishedWork) {
-        this.listOfSimilarUnpublishedWork = listOfSimilarUnpublishedWork;
-    }
-
-    public List<PublishedWork> getListOfSimilarImagePublishedWork() {
-        return listOfSimilarImagePublishedWork;
-    }
-
-    public void setListOfSimilarImagePublishedWork(List<PublishedWork> listOfSimilarImagePublishedWork) {
-        this.listOfSimilarImagePublishedWork = listOfSimilarImagePublishedWork;
-    }
-
-    public List<UnpublishedWork> getListOfSimilarImageUnpublishedWork() {
-        return listOfSimilarImageUnpublishedWork;
-    }
-
-    public void setListOfSimilarImageUnpublishedWork(List<UnpublishedWork> listOfSimilarImageUnpublishedWork) {
-        this.listOfSimilarImageUnpublishedWork = listOfSimilarImageUnpublishedWork;
+    public void setListOfSimilarDocuments(List<SimilarDocument> listOfSimilarDocuments) {
+        this.listOfSimilarDocuments = listOfSimilarDocuments;
     }
 
     @Override

@@ -7,12 +7,10 @@ import com.mongodb.DBCursor;
 import com.mongodb.MongoClient;
 import com.originstamp.client.dto.OriginStampHash;
 import com.originstamp.client.dto.OriginStampTableEntity;
-import com.plagchain.database.dbobjects.PublishedWork;
+import com.plagchain.database.dbobjects.MinHashFeatures;
 import com.plagchain.database.dbobjects.SeedSubmission;
-import com.plagchain.database.dbobjects.UnpublishedWork;
-import com.plagchain.database.service.PublishedWorkService;
+import com.plagchain.database.service.MinHashFeaturesService;
 import com.plagchain.database.service.SeedSubmissionService;
-import com.plagchain.database.service.UnpublishedWorkService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,7 +20,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestMethod;
 
-import javax.inject.Inject;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -54,17 +51,14 @@ public class BitcoinAnchorService {
     @Value("${spring.data.mongodb.database}")
     private String databaseName;
 
-    private PublishedWorkService publishedWorkService;
-    private UnpublishedWorkService unpublishedWorkService;
+    private MinHashFeaturesService minHashFeaturesService;
     private SeedSubmissionService seedSubmissionService;
 
     private MongoTemplate mongoTemplate;
     private ObjectMapper objectMapper;
 
-    public BitcoinAnchorService(PublishedWorkService publishedWorkService, UnpublishedWorkService unpublishedWorkService,
-                                SeedSubmissionService seedSubmissionService) {
-        this.publishedWorkService = publishedWorkService;
-        this.unpublishedWorkService = unpublishedWorkService;
+    public BitcoinAnchorService(MinHashFeaturesService minHashFeaturesService, SeedSubmissionService seedSubmissionService) {
+        this.minHashFeaturesService = minHashFeaturesService;
         this.seedSubmissionService = seedSubmissionService;
     }
     /**
@@ -84,13 +78,9 @@ public class BitcoinAnchorService {
         checkBitcoinConfirmationAndUpdate();
         log.info("Checking confirmation of existing transactions completed");
 
-        log.info("Adding new published work transactions to Bitcoin");
-        anchorNewTransanctionToBitcoin(true);
-        log.info("Adding new published work transactions to Bitcoin completed");
-
-        log.info("Adding new unpublished work transactions to Bitcoin");
-        anchorNewTransanctionToBitcoin(false);
-        log.info("Adding new unpublished work transactions to Bitcoin completed");
+        log.info("Adding new doc hash to Bitcoin");
+        anchorNewTransanctionToBitcoin();
+        log.info("Adding new doc hash to Bitcoin completed");
 
         log.info("Anchoring process Completed");
     }
@@ -169,37 +159,24 @@ public class BitcoinAnchorService {
     /**
      * Anchor transactions into Bitcoin. Create " " separated seed of SHA-256 hash of all documents, then hash the seed
      * and submit the SHA-256 hash of the seed to the Originstamp server
-     * @param isPublishedWorkStream set to true if anchoring is done for published work stream
      */
-    public void anchorNewTransanctionToBitcoin(boolean isPublishedWorkStream) {
+    public void anchorNewTransanctionToBitcoin() {
         StringJoiner seed = new StringJoiner(" ");
         BasicDBObject query = new BasicDBObject("submitted_originstamp", false);
         DBCursor cursor;
         int counter = 0;
         //Get transactions from respective DB items which are not submitted yet.
-        if(isPublishedWorkStream) {
-            cursor = publishedWorkService.find(query);
-            while(cursor.hasNext()){
-                PublishedWork singleDocument = mongoTemplate.getConverter().read(PublishedWork.class, cursor.next());
-                //Append the document hash
-                seed.add(singleDocument.getDocHashKey());
-                counter++;
-                //Set submittedToOriginstamp to true and save in DB
-                singleDocument.setSubmittedToOriginstamp(true);
-                publishedWorkService.save(singleDocument);
-            }
-        } else {
-            cursor = unpublishedWorkService.find(query);
-            while(cursor.hasNext()) {
-                UnpublishedWork singleDocument = mongoTemplate.getConverter().read(UnpublishedWork.class, cursor.next());
-                //Append the document hash
-                seed.add(singleDocument.getDocHashKey());
-                counter++;
-                //Set submittedToOriginstamp to true and save in DB
-                singleDocument.setSubmittedToOriginstamp(true);
-                unpublishedWorkService.save(singleDocument);
-            }
+        cursor = minHashFeaturesService.find(query);
+        while(cursor.hasNext()){
+            MinHashFeatures singleDocument = mongoTemplate.getConverter().read(MinHashFeatures.class, cursor.next());
+            //Append the document hash
+            seed.add(singleDocument.getDocHashKey());
+            counter++;
+            //Set submittedToOriginstamp to true and save in DB
+            singleDocument.setSubmittedToOriginstamp(true);
+            minHashFeaturesService.save(singleDocument);
         }
+
         if(counter > 0) {
             //Get hash of the seed file
             String seedHash = generateSHA256HashFromString(seed.toString());
@@ -210,8 +187,6 @@ public class BitcoinAnchorService {
             SeedSubmission saveSeedToDB = new SeedSubmission();
             saveSeedToDB.setPlagchainSeed(seed.toString());
             saveSeedToDB.setPlagchainSeedHash(seedHash);
-            if(isPublishedWorkStream)
-                saveSeedToDB.setPublishedWork(true);
             seedSubmissionService.save(saveSeedToDB);
 
             log.info("Saved and Submitted Hash: {}", seedHash);

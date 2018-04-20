@@ -29,9 +29,6 @@ public class SeedSubmission implements Serializable{
     @TextIndexed
     private String plagchainSeed;
 
-    @Field("publishedwork")
-    private boolean publishedWork;
-
     @Field("originstamp_seed_address")
     private String originstampBtcAddress;
 
@@ -69,14 +66,6 @@ public class SeedSubmission implements Serializable{
 
     public void setPlagchainSeedHash(String plagchainSeedHash) {
         this.plagchainSeedHash = plagchainSeedHash;
-    }
-
-    public boolean isPublishedWork() {
-        return publishedWork;
-    }
-
-    public void setPublishedWork(boolean publishedWork) {
-        this.publishedWork = publishedWork;
     }
 
     public String getOriginstampBtcAddress() {

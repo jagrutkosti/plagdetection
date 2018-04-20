@@ -11,6 +11,7 @@ public class ChainData {
     private List<Integer> textMinHash;
     private List<String> imageHash;
     private String contactInfo;
+    private String publisherWalletAddress;
 
     public String getFileName() {
         return fileName;
@@ -42,5 +43,13 @@ public class ChainData {
 
     public void setContactInfo(String contactInfo) {
         this.contactInfo = contactInfo;
+    }
+
+    public String getPublisherWalletAddress() {
+        return publisherWalletAddress;
+    }
+
+    public void setPublisherWalletAddress(String publisherWalletAddress) {
+        this.publisherWalletAddress = publisherWalletAddress;
     }
 }

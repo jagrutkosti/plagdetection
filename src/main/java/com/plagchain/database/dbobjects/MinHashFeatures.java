@@ -2,8 +2,6 @@ package com.plagchain.database.dbobjects;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -17,8 +15,8 @@ import java.util.Objects;
  * Created by Jagrut on 27-04-2017.
  * Database object for Published Work content
  */
-@Document(collection = "published_work")
-public class PublishedWork implements Serializable {
+@Document(collection = "min_hash_features")
+public class MinHashFeatures implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -35,9 +33,6 @@ public class PublishedWork implements Serializable {
     @NotNull
     @Field("list_minHash")
     private List<Integer> listMinHash;
-
-    @Field("image_list_minHash")
-    private List<String> imageListMinHash;
 
     @Field("publisher_address")
     private String publisherAddress;
@@ -83,14 +78,6 @@ public class PublishedWork implements Serializable {
         this.fileName = fileName;
     }
 
-    public List<String> getImageListMinHash() {
-        return imageListMinHash;
-    }
-
-    public void setImageListMinHash(List<String> imageListMinHash) {
-        this.imageListMinHash = imageListMinHash;
-    }
-
     public String getPublisherAddress() {
         return publisherAddress;
     }
@@ -131,8 +118,8 @@ public class PublishedWork implements Serializable {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        final PublishedWork publishedWork = (PublishedWork) o;
-        return Objects.equals(this.id, publishedWork.id);
+        final MinHashFeatures minHashFeatures = (MinHashFeatures) o;
+        return Objects.equals(this.id, minHashFeatures.id);
     }
 
     @Override

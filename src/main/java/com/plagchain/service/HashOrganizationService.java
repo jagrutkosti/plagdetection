@@ -1,11 +1,10 @@
 package com.plagchain.service;
 
 import com.google.gson.Gson;
-import com.plagchain.database.service.PublishedWorkService;
-import com.plagchain.database.service.UnpublishedWorkService;
+import com.plagchain.Constants;
+import com.plagchain.database.dbobjects.MinHashFeatures;
+import com.plagchain.database.service.MinHashFeaturesService;
 import com.plagchain.domain.ChainData;
-import com.plagchain.database.dbobjects.PublishedWork;
-import com.plagchain.database.dbobjects.UnpublishedWork;
 import multichain.command.*;
 import multichain.object.Stream;
 import multichain.object.StreamItem;
@@ -16,7 +15,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import javax.inject.Inject;
 import javax.xml.bind.DatatypeConverter;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,22 +29,10 @@ import java.util.stream.Collectors;
 @Component
 public class HashOrganizationService {
     private final Logger log = LoggerFactory.getLogger(HashOrganizationService.class);
+    private MinHashFeaturesService minHashFeaturesService;
 
-    @Value("${plagdetection.chainname}")
-    private String chainName;
-
-    @Value("${plagdetection.streamname.publishedwork}")
-    private String publishedWorkStreamName;
-
-    @Value("${plagdetection.streamname.unpublishedwork}")
-    private String unpublishedWorkStreamName;
-
-    private PublishedWorkService publishedWorkService;
-    private UnpublishedWorkService unpublishedWorkService;
-
-    public HashOrganizationService(PublishedWorkService publishedWorkService, UnpublishedWorkService unpublishedWorkService) {
-        this.publishedWorkService = publishedWorkService;
-        this.unpublishedWorkService = unpublishedWorkService;
+    public HashOrganizationService(MinHashFeaturesService minHashFeaturesService) {
+        this.minHashFeaturesService = minHashFeaturesService;
     }
     /**
      * Run this method after every $time milliseconds mentioned in application.properties file
@@ -54,15 +40,10 @@ public class HashOrganizationService {
     @Scheduled(fixedRateString = "${plagdetection.hash.organize.timeinterval}")
     private void startOrganization() {
         log.info("Organization of hashes started.");
-        ChainCommand.initializeChain(chainName);
+        ChainCommand.initializeChain(Constants.CHAIN_NAME);
 
-        log.info("Organization of PublishedWork hashes started.");
-        organizePublishedWork();
-        log.info("Organization of PublishedWork hashes finished.");
-
-        log.info("Organization of UnpublishedWork hashes started.");
-        organizeUnpublishedWork();
-        log.info("Organization of UnpublishedWork hashes finished.");
+        log.info("Organization of MinHashFeatures hashes started.");
+        organizeMinHashFeatures();
 
         log.info("Organization of hashes finished.");
     }
@@ -70,13 +51,13 @@ public class HashOrganizationService {
     /**
      * Responsible for organizing the hashes for "publishedWork" stream
      */
-    private void organizePublishedWork() {
+    private void organizeMinHashFeatures() {
         //if not subscribed already, subscribe to the stream
-        subscibeToStream(publishedWorkStreamName);
+        subscibeToStream(Constants.STREAMNAME);
         //get all items from database
-        List<PublishedWork> allItemsInDb = publishedWorkService.findAll();
+        List<MinHashFeatures> allItemsInDb = minHashFeaturesService.findAll();
         //get all keys from block chain
-        List<StreamKeyPublisherInfo> allKeysFromPublishedworkStream = allKeysInStream(publishedWorkStreamName);
+        List<StreamKeyPublisherInfo> allKeysFromPublishedworkStream = allKeysInStream(Constants.STREAMNAME);
 
         if(allKeysFromPublishedworkStream != null && allKeysFromPublishedworkStream.size() > 0) {
             //filter the keys which are confirmed in plagchain
@@ -89,57 +70,21 @@ public class HashOrganizationService {
             //iterate over all keys not in DB
             for(StreamKeyPublisherInfo singleItem : newItems) {
                 //get all items associated with this key from this particular stream
-                List<StreamItem> addToDatabase = allItemsForKey(publishedWorkStreamName, singleItem.getKey());
+                List<StreamItem> addToDatabase = allItemsForKey(Constants.STREAMNAME, singleItem.getKey());
                 //add relevant info to POJO and save the POJO in DB
                 if(addToDatabase != null && addToDatabase.size() > 0) {
-                    PublishedWork dbPutItem = new PublishedWork();
+                    MinHashFeatures dbPutItem = new MinHashFeatures();
                     dbPutItem.setDocHashKey(singleItem.getKey());
                     dbPutItem.setPublisherAddress(addToDatabase.get(0).getPublishers().get(0));
                     dbPutItem.setTimestamp(((Long)addToDatabase.get(0).getBlocktime()).toString());
 
-                    dbPutItem = (PublishedWork) addMinHashToDbObject(addToDatabase, dbPutItem);
-                    publishedWorkService.save(dbPutItem);
+                    dbPutItem = addMinHashToDbObject(addToDatabase, dbPutItem);
+                    minHashFeaturesService.save(dbPutItem);
                 }
             }
         }
     }
 
-    /**
-     * Responsible for organizing the hashes for "unpublishedWork" stream
-     */
-    private void organizeUnpublishedWork() {
-        //if not subscribed already, subscribe to the stream
-        subscibeToStream(unpublishedWorkStreamName);
-        //get all items from database
-        List<UnpublishedWork> allItemsInDb = unpublishedWorkService.findAll();
-        //get all keys from block chain
-        List<StreamKeyPublisherInfo> allKeysFromUnpublishedworkStream = allKeysInStream(unpublishedWorkStreamName);
-
-        if(allKeysFromUnpublishedworkStream != null && allKeysFromUnpublishedworkStream.size() > 0) {
-            //filter the keys which are confirmed in plagchain
-            allKeysFromUnpublishedworkStream = filterChainKeys(allKeysFromUnpublishedworkStream);
-
-            //choose the keys that are not already in the database
-            List<StreamKeyPublisherInfo> newItems = allKeysFromUnpublishedworkStream.stream()
-                    .filter(chainItem -> !allItemsInDb.stream().anyMatch(dbItem -> dbItem.getDocHashKey().equalsIgnoreCase(chainItem.getKey())))
-                    .collect(Collectors.toList());
-            //iterate over all keys not in DB
-            for(StreamKeyPublisherInfo singleItem : newItems) {
-                //get all items associated with this key from this particular stream
-                List<StreamItem> addToDatabase = allItemsForKey(unpublishedWorkStreamName, singleItem.getKey());
-                //add relevant info to POJO and save the POJO in DB
-                if(addToDatabase != null && addToDatabase.size() > 0) {
-                    UnpublishedWork dbPutItem = new UnpublishedWork();
-                    dbPutItem.setDocHashKey(singleItem.getKey());
-                    dbPutItem.setPublisherAddress(addToDatabase.get(0).getPublishers().get(0));
-                    dbPutItem.setTimestamp(((Long)addToDatabase.get(0).getBlocktime()).toString());
-
-                    dbPutItem = (UnpublishedWork) addMinHashToDbObject(addToDatabase, dbPutItem);
-                    unpublishedWorkService.save(dbPutItem);
-                }
-            }
-        }
-    }
 
     /**
      * Generic method to subsribe to a stream
@@ -204,19 +149,17 @@ public class HashOrganizationService {
      * @param dbObject the DB object to be updated with min hashes
      * @return {Object} w.r.t dbObject after updating with min hashes
      */
-    private Object addMinHashToDbObject(List<StreamItem> addToDatabase, Object dbObject) {
+    private MinHashFeatures addMinHashToDbObject(List<StreamItem> addToDatabase, MinHashFeatures dbObject) {
         log.info("Adding MinHash from Blockchain stream item to DB object");
         String fileName = "";
         List<Integer> minHashList = new ArrayList<>();
-        List<String> imageMinHashList = new ArrayList<>();
         String contactInfo = "";
+
         for (StreamItem minHash : addToDatabase) {
             try {
                 ChainData chainData = transformDataFromHexToObject(minHash.getData());
                 if(chainData.getTextMinHash() != null)
                     minHashList.addAll(chainData.getTextMinHash());
-                if(chainData.getImageHash() != null)
-                    imageMinHashList.addAll(chainData.getImageHash());
                 if(chainData.getContactInfo() != null)
                     contactInfo = chainData.getContactInfo();
                 if(chainData.getFileName() != null)
@@ -225,21 +168,11 @@ public class HashOrganizationService {
                 e.printStackTrace();
             }
         }
-        if(dbObject instanceof PublishedWork) {
-            PublishedWork publishedWorkObject = (PublishedWork) dbObject;
-            publishedWorkObject.setListMinHash(minHashList);
-            publishedWorkObject.setImageListMinHash(imageMinHashList);
-            publishedWorkObject.setContactInfo(contactInfo);
-            publishedWorkObject.setFileName(fileName);
-            return  publishedWorkObject;
-        } else {
-            UnpublishedWork unpublishedWorkObject = (UnpublishedWork) dbObject;
-            unpublishedWorkObject.setListMinHash(minHashList);
-            unpublishedWorkObject.setImageListMinHash(imageMinHashList);
-            unpublishedWorkObject.setContactInfo(contactInfo);
-            unpublishedWorkObject.setFileName(fileName);
-            return unpublishedWorkObject;
-        }
+
+        dbObject.setListMinHash(minHashList);
+        dbObject.setContactInfo(contactInfo);
+        dbObject.setFileName(fileName);
+        return dbObject;
     }
 
     /**

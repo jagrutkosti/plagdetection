@@ -4,8 +4,8 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.MongoClient;
-import com.plagchain.database.dbobjects.UnpublishedWork;
-import com.plagchain.database.repository.UnpublishedWorkRepository;
+import com.plagchain.database.dbobjects.MinHashFeatures;
+import com.plagchain.database.repository.MinHashFeaturesRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,27 +17,27 @@ import javax.inject.Inject;
 import java.util.List;
 
 /**
- * Created by Jagrut on 22-05-2017.
- * Service to manage UnpublishedWork Database tasks
+ * Created by Jagrut on 27-04-2017.
+ * Service to manage MinHashFeatures Database tasks
  */
 @Service
-public class UnpublishedWorkService {
+public class MinHashFeaturesService {
 
-    private final Logger log = LoggerFactory.getLogger(UnpublishedWorkService.class);
+    private final Logger log = LoggerFactory.getLogger(MinHashFeaturesService.class);
 
     @Value("${spring.data.mongodb.database}")
     private String databaseName;
 
     @Inject
-    private UnpublishedWorkRepository unpublishedWorkRepository;
+    private MinHashFeaturesRepository minHashFeaturesRepository;
 
     /**
-     * Save a publishedWork.
+     * Save a minHashFeatures.
      * @return the persisted entity
      */
-    public UnpublishedWork save(UnpublishedWork publishedWork) {
-        log.info("Request to save UnpublishedWork : {}", publishedWork);
-        UnpublishedWork result = unpublishedWorkRepository.save(publishedWork);
+    public MinHashFeatures save(MinHashFeatures minHashFeatures) {
+        log.info("Request to save MinHashFeatures : {}", minHashFeatures);
+        MinHashFeatures result = minHashFeaturesRepository.save(minHashFeatures);
         return result;
     }
 
@@ -45,9 +45,9 @@ public class UnpublishedWorkService {
      *  get all the publishedWorks.
      *  @return the list of entities
      */
-    public List<UnpublishedWork> findAll() {
-        log.info("Request to get all UnpublishedWorks");
-        List<UnpublishedWork> result = unpublishedWorkRepository.findAll();
+    public List<MinHashFeatures> findAll() {
+        log.info("Request to get all PublishedWorks");
+        List<MinHashFeatures> result = minHashFeaturesRepository.findAll();
         return result;
     }
 
@@ -55,51 +55,51 @@ public class UnpublishedWorkService {
      *  get one publishedWork by id.
      *  @return the entity
      */
-    public UnpublishedWork findOne(String id) {
-        log.info("Request to get UnpublishedWork : {}", id);
-        UnpublishedWork publishedWork = unpublishedWorkRepository.findOne(id);
-        return publishedWork;
+    public MinHashFeatures findOne(String id) {
+        log.info("Request to get MinHashFeatures : {}", id);
+        MinHashFeatures minHashFeatures = minHashFeaturesRepository.findOne(id);
+        return minHashFeatures;
     }
 
     /**
      *  delete the  publishedWork by id.
      */
     public void delete(String id) {
-        log.info("Request to delete UnpublishedWork : {}", id);
-        unpublishedWorkRepository.delete(id);
+        log.info("Request to delete MinHashFeatures : {}", id);
+        minHashFeaturesRepository.delete(id);
     }
 
     /**
      * delete ALL publishedWork in Database.
      */
     public void deleteAll(){
-        log.info("Request to delete all UnpublishedWorks");
-        unpublishedWorkRepository.deleteAll();
+        log.info("Request to delete all PublishedWorks");
+        minHashFeaturesRepository.deleteAll();
     }
 
     /**
      * Use only for fetching very large number of documents.
-     * Get all documents from UnpublishedWork collection.
+     * Get all documents from MinHashFeatures collection.
      * Using MongoTemplate and DBCursor to iterate over millions of records.
      * @return {DBCursor} to iterate over all documents in the collection
      */
     public DBCursor find() {
-        log.info("Request to get all UnpublishedWorks with DBCursor");
+        log.info("Request to get all PublishedWorks with DBCursor");
         MongoTemplate mongoTemplate = new MongoTemplate(new SimpleMongoDbFactory(new MongoClient(), databaseName));
-        DBCollection dbCollection = mongoTemplate.getCollection("unpublished_work");
+        DBCollection dbCollection = mongoTemplate.getCollection("published_work");
         return dbCollection.find();
     }
 
     /**
      * Use only for fetching very large number of documents.
-     * Get all documents from UnpublishedWork collection which satisfy the criteria.
+     * Get all documents from MinHashFeatures collection which satisfy the given criteria.
      * Using MongoTemplate and DBCursor to iterate over millions of records.
      * @return {DBCursor} to iterate over all documents in the collection
      */
     public DBCursor find(BasicDBObject query) {
-        log.info("Request to get DBCUrsor for all UnpublishedWorks for given query");
+        log.info("Request to get DBCurosr for all PublishedWorks for given query");
         MongoTemplate mongoTemplate = new MongoTemplate(new SimpleMongoDbFactory(new MongoClient(), databaseName));
-        DBCollection dbCollection = mongoTemplate.getCollection("unpublished_work");
+        DBCollection dbCollection = mongoTemplate.getCollection("published_work");
         return dbCollection.find(query);
     }
 }
