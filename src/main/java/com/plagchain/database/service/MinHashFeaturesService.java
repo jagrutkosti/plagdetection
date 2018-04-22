@@ -4,6 +4,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.MongoClient;
+import com.plagchain.Constants;
 import com.plagchain.database.dbobjects.MinHashFeatures;
 import com.plagchain.database.repository.MinHashFeaturesRepository;
 import org.slf4j.Logger;
@@ -86,7 +87,7 @@ public class MinHashFeaturesService {
     public DBCursor find() {
         log.info("Request to get all PublishedWorks with DBCursor");
         MongoTemplate mongoTemplate = new MongoTemplate(new SimpleMongoDbFactory(new MongoClient(), databaseName));
-        DBCollection dbCollection = mongoTemplate.getCollection("published_work");
+        DBCollection dbCollection = mongoTemplate.getCollection(Constants.MIN_HASH_DB_NAME);
         return dbCollection.find();
     }
 
@@ -99,7 +100,7 @@ public class MinHashFeaturesService {
     public DBCursor find(BasicDBObject query) {
         log.info("Request to get DBCurosr for all PublishedWorks for given query");
         MongoTemplate mongoTemplate = new MongoTemplate(new SimpleMongoDbFactory(new MongoClient(), databaseName));
-        DBCollection dbCollection = mongoTemplate.getCollection("published_work");
+        DBCollection dbCollection = mongoTemplate.getCollection(Constants.MIN_HASH_DB_NAME);
         return dbCollection.find(query);
     }
 }
