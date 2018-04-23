@@ -22,25 +22,9 @@ public class PlagCheckREST {
 
     private final Logger log = LoggerFactory.getLogger(PlagCheckREST.class);
     private PlagService plagService;
-    private UtilService utilService;
 
-    public PlagCheckREST(PlagService plagService, UtilService utilService) {
+    public PlagCheckREST(PlagService plagService) {
         this.plagService = plagService;
-        this.utilService = utilService;
-    }
-
-    /**
-     * REST method to fetch the seed for a given hash and all corresponding details
-     * @param hashString the hash for which to fetch the seed details
-     * @return {ResponseItem} object containing the SeedSubmission object
-     */
-    @RequestMapping(path = "/getHashSeed", method = RequestMethod.POST)
-    public ResponseItem getHashSeedDetails(@RequestParam("hashString") String hashString) {
-        log.info("REST request to get seed details for hash: {}", hashString);
-        ResponseItem responseItem = new ResponseItem();
-        responseItem.setSeedDetails(utilService.getSeedSubmissionObjectForHash(hashString));
-        responseItem.setSuccess("success");
-        return responseItem;
     }
 
     @PostMapping("/submitDoc")

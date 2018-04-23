@@ -7,8 +7,6 @@ import com.itextpdf.text.pdf.parser.PdfReaderContentParser;
 import com.itextpdf.text.pdf.parser.SimpleTextExtractionStrategy;
 import com.itextpdf.text.pdf.parser.TextExtractionStrategy;
 import com.plagchain.Constants;
-import com.plagchain.database.dbobjects.SeedSubmission;
-import com.plagchain.database.service.SeedSubmissionService;
 import com.plagchain.domain.ChainData;
 import multichain.command.MultichainException;
 import multichain.command.StreamCommand;
@@ -22,7 +20,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.PostConstruct;
-import javax.inject.Inject;
 import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
 import java.security.MessageDigest;
@@ -38,23 +35,7 @@ import java.util.*;
 public class UtilService {
 
     private final Logger log = LoggerFactory.getLogger(UtilService.class);
-
-    @Inject
-    private SeedSubmissionService seedSubmissionService;
     private final int[] randomNumbers = new int[Constants.NUMBER_OF_RANDOM_NUMBERS];
-    /**
-     * Find Seed Submission hash in DB whose plagchain_seed filed contains the given hash
-     * @param hash the hash for which to find the corresponding seed
-     * @return {SeedSubmission} object
-     */
-    public SeedSubmission getSeedSubmissionObjectForHash(String hash) {
-        log.info("UtilService to get seed submission object which contains the given hash");
-        SeedSubmission dbObject = seedSubmissionService.findByOriginstampSeedRegex(hash);
-        if(dbObject != null)
-            return dbObject;
-        else
-            return null;
-    }
 
     /**
      * !!!DO NOT MODIFY random-number.txt FILE EVER, after deployment!!!

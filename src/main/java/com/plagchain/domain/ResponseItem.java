@@ -2,8 +2,6 @@ package com.plagchain.domain;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.plagchain.database.dbobjects.MinHashFeatures;
-import com.plagchain.database.dbobjects.SeedSubmission;
 
 import java.util.List;
 
@@ -15,7 +13,6 @@ import java.util.List;
 public class ResponseItem {
     private String error;
     private String success;
-    private SeedSubmission seedDetails;
     private List<SimilarDocument> listOfSimilarDocuments;
 
     public String getError() {
@@ -32,14 +29,6 @@ public class ResponseItem {
 
     public void setSuccess(String success) {
         this.success = success;
-    }
-
-    public SeedSubmission getSeedDetails() {
-        return seedDetails;
-    }
-
-    public void setSeedDetails(SeedSubmission seedDetails) {
-        this.seedDetails = seedDetails;
     }
 
     public List<SimilarDocument> getListOfSimilarDocuments() {
