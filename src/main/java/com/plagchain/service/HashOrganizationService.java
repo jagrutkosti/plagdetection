@@ -75,7 +75,6 @@ public class HashOrganizationService {
                 if(addToDatabase != null && addToDatabase.size() > 0) {
                     MinHashFeatures dbPutItem = new MinHashFeatures();
                     dbPutItem.setDocHashKey(singleItem.getKey());
-                    dbPutItem.setPublisherAddress(addToDatabase.get(0).getPublishers().get(0));
                     dbPutItem.setTimestamp(((Long)addToDatabase.get(0).getBlocktime()).toString());
 
                     dbPutItem = addMinHashToDbObject(addToDatabase, dbPutItem);
@@ -154,6 +153,7 @@ public class HashOrganizationService {
         String fileName = "";
         List<Integer> minHashList = new ArrayList<>();
         String contactInfo = "";
+        String publisherAddress = "";
 
         for (StreamItem minHash : addToDatabase) {
             try {
@@ -164,6 +164,8 @@ public class HashOrganizationService {
                     contactInfo = chainData.getContactInfo();
                 if(chainData.getFileName() != null)
                     fileName = chainData.getFileName();
+                if(chainData.getPublisherWalletAddress() != null)
+                    publisherAddress = chainData.getPublisherWalletAddress();
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -172,6 +174,7 @@ public class HashOrganizationService {
         dbObject.setListMinHash(minHashList);
         dbObject.setContactInfo(contactInfo);
         dbObject.setFileName(fileName);
+        dbObject.setPublisherAddress(publisherAddress);
         return dbObject;
     }
 

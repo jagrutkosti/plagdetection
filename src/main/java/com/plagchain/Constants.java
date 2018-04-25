@@ -5,7 +5,7 @@ public final class Constants {
     public static final int WORD_SHINGLE_LENGTH = 3;
     public static final String RANDOM_NUMBERS_FILE = "/random-numbers.txt";
     public static final int NUMBER_OF_RANDOM_NUMBERS = 199;
-    public static final String STREAMNAME = "min_hash";
+    public static final String STREAMNAME = "min_hash_new";
     public static final String MIN_HASH_COLLECTION_NAME = "min_hash_features";
 
     public static final String CHAIN_NAME = "plagchain";
