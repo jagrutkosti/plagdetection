@@ -7,6 +7,7 @@ import com.mongodb.MongoClient;
 import com.plagchain.Constants;
 import com.plagchain.GenericResponse;
 import com.plagchain.database.dbobjects.MinHashFeatures;
+import com.plagchain.database.repository.MinHashFeaturesRepository;
 import com.plagchain.database.service.MinHashFeaturesService;
 import com.plagchain.domain.ResponseItem;
 import com.plagchain.domain.SimilarDocument;
@@ -35,11 +36,13 @@ public class PlagService {
     private String databaseName;
 
     private MinHashFeaturesService minHashFeaturesService;
+    private MinHashFeaturesRepository minHashFeaturesRepository;
     private MongoTemplate mongoTemplate;
 
-    public PlagService(MinHashFeaturesService minHashFeaturesService, UtilService utilService) {
+    public PlagService(MinHashFeaturesService minHashFeaturesService, UtilService utilService, MinHashFeaturesRepository minHashFeaturesRepository) {
         this.minHashFeaturesService = minHashFeaturesService;
         this.utilService = utilService;
+        this.minHashFeaturesRepository = minHashFeaturesRepository;
     }
 
     /**
@@ -59,7 +62,14 @@ public class PlagService {
         List<String> allShingles = new ArrayList<>();
         allShingles.addAll(utilService.createShingles(Constants.SHINGLE_LENGTH, cleanedText));
         int[] minHashFromShingles = utilService.generateMinHashSignature(allShingles);
-        return runMinHashAlgorithm(Arrays.asList(ArrayUtils.toObject(minHashFromShingles)), response);
+
+        //runLSH(minHashFromShingles);
+
+        //long startTime = System.nanoTime();
+        ResponseItem r = runMinHashAlgorithm(Arrays.asList(ArrayUtils.toObject(minHashFromShingles)), response);
+        //long endTime = System.nanoTime();
+        //System.out.println("Time taken by MinHash in ms::::" + (endTime-startTime)/1000000);
+        return r;
     }
 
     /**
@@ -70,7 +80,7 @@ public class PlagService {
      * @return {ResponseItem} object after populating with appropriate content
      */
     public ResponseItem runMinHashAlgorithm(List<Integer> plagCheckMinHashList, ResponseItem response) {
-        log.info("Started Similarity Algorithm for Published work");
+        log.info("Started MinHash without LSH");
         initializeMongoConverter();
         List<SimilarDocument> similarDocuments = new ArrayList<>();
         DBCursor dbCursor = minHashFeaturesService.find();
@@ -166,5 +176,38 @@ public class PlagService {
         else
             response.setError("Error submitting document to blockchain in Min_Hash stream");
         return response;
+    }
+
+    public void runLSH(int[] testDocMinHashList) {
+        log.info("Started MinHash with LSH");
+        int noOfDocs = minHashFeaturesRepository.countAllByFileNameIsNotNull();
+        int[][] lshMatrix = new int[noOfDocs + 1][Constants.NUMBER_OF_RANDOM_NUMBERS + 1];
+        initializeMongoConverter();
+        List<String> fileNames = new ArrayList<>();
+        DBCursor dbCursor = minHashFeaturesService.find();
+        int i = 0;
+        while(dbCursor.hasNext()) {
+            MinHashFeatures singleDocumentDB = mongoTemplate.getConverter().read(MinHashFeatures.class, dbCursor.next());
+            fileNames.add(singleDocumentDB.getFileName());
+            List<Integer> minHashes = singleDocumentDB.getListMinHash();
+            for(int j = 0; j < minHashes.size(); j++) {
+                lshMatrix[i][j] = minHashes.get(j);
+            }
+            i++;
+        }
+        for(int j = 0; j < testDocMinHashList.length; j++) {
+            lshMatrix[i][j] = testDocMinHashList[j];
+        }
+        System.out.println("LSH matrix size:::" + lshMatrix.length);
+        long startTime = System.nanoTime();
+        LSH lsh = new LSH(lshMatrix, 20);
+        lsh.performLSH();
+        List<Integer> similarDocs = lsh.getSimilarDocuments(lshMatrix.length - 1);
+        long endTime = System.nanoTime();
+        System.out.println("Time taken by LSH in ms::::" + (endTime-startTime)/1000000);
+
+        for(Integer simIndex : similarDocs) {
+            System.out.println(fileNames.get(simIndex));
+        }
     }
 }
